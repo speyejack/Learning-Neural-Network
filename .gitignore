@@ -1,7 +1,5 @@
-raycast
-raycast.exe
-setup.json
-*.ppm
+learnNN
+learnNN.exe
 *#*
 .#*
 
