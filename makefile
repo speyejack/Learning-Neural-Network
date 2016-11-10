@@ -12,7 +12,7 @@ HEADERDIR = src
 SOURCES = $(wildcard $(SOURCEDIR)/*.c)
 OBJECTS = $(patsubst $(SOURCEDIR)/%.c, $(BUILDDIR)/%.o, $(SOURCES))
 
-.PHONY: all clean build clear
+.PHONY: all clean build clear $(BINARY)
 
 all: build
 
@@ -20,8 +20,8 @@ $(BINARY):
 	$(CC) $(CFLAGS) $(LDFLAGS) $(SOURCES) -o $(BINARY) 
 
 clean:
-	rm -f $(OUTPUT) 
-	rm -f $(OUTPUT).exe*
+	rm -f $(BINARY) 
+	rm -f $(BINARY).exe*
 	rm -f $(SOURCEDIR)/*~
 	rm -f *.o
 	rm -f *~
