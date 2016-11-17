@@ -1,50 +1,55 @@
 #include <vector>
 #include <assert.h>
 #include "matrix.h"
-
+Matrix::Matrix() : height(0), width(0){
+	matrix.resize(height * width);
+}
 Matrix::Matrix(int width, int height) : height(height), width(width){
-	size = height * width;
-
-	matrix.reserve(size);
-}
-/*
-Matrix::Matrix(Matrix* o){
-	this->height = o->height;
-	this->width = o->width;
-	this->size = o->size;
-	this->matrix = o->matrix;
+	matrix.resize(height * width);
 }
 
-inline Matrix Matrix::operator=(Matrix &o){
-	return new Matrix(o);
+Matrix::Matrix(const Matrix& o){
+	this->height = o.height;
+	this->width = o.width;
+	this->matrix = o.matrix;
 }
-*/
-inline Matrix Matrix::operator+(Matrix &o){
-	Matrix a(*this);
-	for (int i = 0; i < size; i++)
+
+Matrix& Matrix::operator=(const Matrix &o){
+	
+	this->height = o.height;
+	this->width = o.width;
+	this->matrix = o.matrix;
+	
+	return *this;
+}
+
+Matrix Matrix::operator+(const Matrix &o){
+	Matrix out(width, height);
+	for (int i = 0; i < get_size(); i++){
+		out.matrix[i] = matrix[i] + o.matrix[i];
+	}
+	return out;
+}
+
+void Matrix::operator+=(const Matrix &o){
+	for (int i = 0; i < get_size(); i++)
 		matrix[i] += o.matrix[i];
-	return a;
-}
-
-inline void Matrix::operator+=(Matrix &o){
-	for (int i = 0; i < size; i++)
-		matrix[i] += o.matrix[i];
 }
 
 
-inline Matrix Matrix::operator-(Matrix &o){
-	Matrix a(*this);
-	for (int i = 0; i < size; i++)
-		matrix[i] -= o.matrix[i];
-	return a;
+Matrix Matrix::operator-(const Matrix &o){
+	Matrix out(width, height);
+	for (int i = 0; i < get_size(); i++)
+		out.matrix[i] = matrix[i] - o.matrix[i];
+	return out;
 }
 
-inline void Matrix::operator-=(Matrix &o){
-	for (int i = 0; i < size; i++)
+void Matrix::operator-=(const Matrix &o){
+	for (int i = 0; i < get_size(); i++)
 		matrix[i] -= o.matrix[i];
 }
 
-Matrix Matrix::dot(Matrix &o){
+Matrix Matrix::dot(Matrix& o){
 	assert(this->width == o.height);
 
 	Matrix out(o.width, this->height);
@@ -59,7 +64,6 @@ Matrix Matrix::dot(Matrix &o){
 				dot += this->get_value(element, row) * o.get_value(col, element);
 				
 			}
-			printf("Dot: %f\t Col: %d\t Row: %d\n", dot, col, row);
 			out.set_value(col, row, dot);
 			
 		}
