@@ -10,9 +10,9 @@ private:
 	int iteration;
 	double learning_rate;
 	std::vector<double> get_error(std::vector<double>& output, std::vector<double>& correct_output);
-	Network* net;
 
 protected:
+	Network* net;
 	int get_batch_size(){return batch_size;}
 public:
 	Trainer(Network*, int, double);
