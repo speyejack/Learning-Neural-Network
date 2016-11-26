@@ -90,10 +90,10 @@ Vector Layer::back_prop(Vector& error){
 
 	Matrix del_input = input_w->transpose().dot(del_input_prim) +  activate_w->transpose().dot(del_activate_prim) + forget_w->transpose().dot(del_forget) + output_w->transpose().dot(del_output_prim);
 
-	Matrix err_i_w = input_w->dot(state.prev_input->transpose());
-	Matrix err_a_w = activate_w->dot(state.prev_input->transpose());
-	Matrix err_f_w = forget_w->dot(state.prev_input->transpose());
-	Matrix err_o_w = output_w->dot(state.prev_input->transpose());
+	Matrix err_i_w = del_input_prim.dot(state.prev_input->transpose());
+	Matrix err_a_w = del_activate_prim.dot(state.prev_input->transpose());
+	Matrix err_f_w = del_forget_prim.dot(state.prev_input->transpose());
+	Matrix err_o_w = del_output_prim.dot(state.prev_input->transpose());
 
 	*(this->error.err_input_w) += err_i_w;
 	*(this->error.err_activate_w) += err_a_w;
