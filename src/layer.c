@@ -58,8 +58,8 @@ Vector Layer::forward_prop(Vector& input){
 	state.activate_gate = new Matrix(activate_gate);
 	state.forget_gate = new Matrix(forget_gate);
 	state.output_gate = new Matrix(output_gate);
+	state.prev_mem = new Vector(*memory);
 
-	
 	*memory = (Vector) (input_gate * activate_gate + forget_gate * *memory);
 	Vector tanhMem = *memory;
 	tanhMem.Mtanh();
