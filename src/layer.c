@@ -1,6 +1,7 @@
 #include "layer.h"
 #include "matrix.h"
 #include "vector.h"
+#include <assert.h>
 
 
 Layer::Layer(int input_size, int output_size, std::default_random_engine gen){
@@ -42,6 +43,7 @@ void Layer::clear_state(){
 }
 
 Vector Layer::forward_prop(Vector& input){
+	assert(input.get_height() == input_size);
 	Vector bias(1);
 	bias.set_value(0,0,1);
 	input = input.concatenate(*(state.prev_output)).concatenate(bias);
@@ -120,4 +122,8 @@ void Layer::apply_error(double learning_rate){
     *forget_w += (*(error.err_forget_w) * learning_rate);
     *output_w += (*(error.err_output_w) * learning_rate);
 	clear_error();
+}
+
+void Layer::reset(){
+	memory->clear_matrix();
 }

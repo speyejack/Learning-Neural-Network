@@ -35,6 +35,7 @@ void Network::back_prop(std::vector<double>& error){
 void Network::apply_error(double learning_rate){
 	for(int i = 0; i < layers.size(); i++){
 		layers[i]->apply_error(learning_rate);
+		layers[i]->reset();
 	}
 
 }

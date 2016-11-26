@@ -45,6 +45,7 @@ public:
 	Vector forward_prop(Vector& input);
 	Vector back_prop(Vector& error);
 	void apply_error(double learning_rate);
+	void reset();
 };
 
 #endif
