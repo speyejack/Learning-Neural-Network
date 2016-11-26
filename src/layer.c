@@ -88,7 +88,10 @@ Vector Layer::back_prop(Vector& error){
 	Matrix del_forget_prim = del_forget* *(state.forget_gate) * (*(state.forget_gate) * -1 + 1);
 	Matrix del_output_prim = del_output* *(state.output_gate) * (*(state.output_gate) * -1 + 1);
 
-	Matrix del_input = input_w->transpose().dot(del_input_prim) +  activate_w->transpose().dot(del_activate_prim) + forget_w->transpose().dot(del_forget) + output_w->transpose().dot(del_output_prim);
+	Matrix del_input = input_w->transpose().dot(del_input_prim) +
+		activate_w->transpose().dot(del_activate_prim) +
+		forget_w->transpose().dot(del_forget_prim) + // Possible fix? maybe not
+		output_w->transpose().dot(del_output_prim);
 
 	Matrix err_i_w = del_input_prim.dot(state.prev_input->transpose());
 	Matrix err_a_w = del_activate_prim.dot(state.prev_input->transpose());
