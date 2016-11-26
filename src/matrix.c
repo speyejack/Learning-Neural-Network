@@ -42,7 +42,7 @@ Matrix& Matrix::operator=(const Matrix &o){
 
 Matrix Matrix::operator+(const Matrix &o){
 	assert(this->get_size() == o.matrix.size());
-	Matrix out(width, height);
+	Matrix out(height, width);
 	for (int i = 0; i < get_size(); i++){
 		out.matrix[i] = matrix[i] + o.matrix[i];
 	}
@@ -51,7 +51,7 @@ Matrix Matrix::operator+(const Matrix &o){
 
 Matrix Matrix::operator*(const Matrix &o){
 	assert(this->get_size() == o.matrix.size());
-	Matrix out(width, height);
+	Matrix out(height, width);
 	for (int i = 0; i < get_size(); i++){
 		out.matrix[i] = matrix[i] * o.matrix[i];
 	}
@@ -59,7 +59,7 @@ Matrix Matrix::operator*(const Matrix &o){
 }
 
 Matrix Matrix::operator+(double scalar){
-	Matrix out(width, height);
+	Matrix out(height, width);
 	for (int i = 0; i < get_size(); i++){
 		out.matrix[i] = matrix[i] + scalar;
 	}
@@ -67,7 +67,7 @@ Matrix Matrix::operator+(double scalar){
 }
 
 Matrix Matrix::operator*(double scalar){
-	Matrix out(width, height);
+	Matrix out(height, width);
 	for (int i = 0; i < get_size(); i++){
 		out.matrix[i] = matrix[i] * scalar; 
 	}
