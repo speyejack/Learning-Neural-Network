@@ -83,7 +83,7 @@ Vector Layer::back_prop(Vector& error){
 	Matrix tanhA = *(state.activate_prim);
 	tanhA.Mtanh();
 	
-	Matrix del_activate_prim = del_activate * ((tanhA * -1) + 1);
+	Matrix del_activate_prim = del_activate * (((tanhA * tanhA) * -1) + 1);
 	Matrix del_input_prim = del_inputg * *(state.input_gate) * (*(state.input_gate) * -1 + 1);
 	Matrix del_forget_prim = del_forget* *(state.forget_gate) * (*(state.forget_gate) * -1 + 1);
 	Matrix del_output_prim = del_output* *(state.output_gate) * (*(state.output_gate) * -1 + 1);
@@ -93,10 +93,11 @@ Vector Layer::back_prop(Vector& error){
 		forget_w->transpose().dot(del_forget_prim) + // Possible fix? maybe not
 		output_w->transpose().dot(del_output_prim);
 
-	Matrix err_i_w = del_input_prim.dot(state.prev_input->transpose());
-	Matrix err_a_w = del_activate_prim.dot(state.prev_input->transpose());
-	Matrix err_f_w = del_forget_prim.dot(state.prev_input->transpose());
-	Matrix err_o_w = del_output_prim.dot(state.prev_input->transpose());
+	Matrix prev_input = state.prev_input->transpose();
+	Matrix err_i_w = del_input_prim.dot(prev_input);
+	Matrix err_a_w = del_activate_prim.dot(prev_input);
+	Matrix err_f_w = del_forget_prim.dot(prev_input);
+	Matrix err_o_w = del_output_prim.dot(prev_input);
 
 	*(this->error.err_input_w) += err_i_w;
 	*(this->error.err_activate_w) += err_a_w;
