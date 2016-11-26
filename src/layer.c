@@ -14,6 +14,7 @@ Layer::Layer(int input_size, int output_size, std::default_random_engine gen){
 	state = {0};
 	
 	state.prev_output = new Vector(output_size);
+	state.prev_output->clear_matrix();
 
 	input_w->fill_gaussian(gen, 0.0, 1.0);
 	activate_w->fill_gaussian(gen, 0.0, 1.0);
@@ -64,7 +65,6 @@ Vector Layer::forward_prop(Vector& input){
 	Vector tanhMem = *memory;
 	tanhMem.Mtanh();
 	Vector output = output_gate * tanhMem;
-	output = output.subset(0, input_size);
 	state.prev_output = new Vector(output);
 	return output;
 }
