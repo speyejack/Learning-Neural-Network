@@ -6,7 +6,7 @@ Matrix::Matrix() : height(0), width(0){
 	matrix.resize(height * width);
 }
 
-Matrix::Matrix(int width, int height) : height(height), width(width){
+Matrix::Matrix(int height, int width) : height(height), width(width){
 	matrix.resize(height * width);
 }
 
@@ -19,6 +19,7 @@ Matrix::Matrix(const Matrix& o){
 Matrix Matrix::concatenate(Matrix&o){
 	Matrix n = *this;
 	n.matrix.insert(n.matrix.end(), o.matrix.begin(), o.matrix.end());
+	n.height += o.height;
 	return n;
 }
 
@@ -40,6 +41,7 @@ Matrix& Matrix::operator=(const Matrix &o){
 }
 
 Matrix Matrix::operator+(const Matrix &o){
+	assert(this->get_size() == o.matrix.size());
 	Matrix out(width, height);
 	for (int i = 0; i < get_size(); i++){
 		out.matrix[i] = matrix[i] + o.matrix[i];
@@ -48,6 +50,7 @@ Matrix Matrix::operator+(const Matrix &o){
 }
 
 Matrix Matrix::operator*(const Matrix &o){
+	assert(this->get_size() == o.matrix.size());
 	Matrix out(width, height);
 	for (int i = 0; i < get_size(); i++){
 		out.matrix[i] = matrix[i] * o.matrix[i];
@@ -72,12 +75,14 @@ Matrix Matrix::operator*(double scalar){
 }
 
 void Matrix::operator+=(const Matrix &o){
+	assert(this->get_size() == o.matrix.size());
 	for (int i = 0; i < get_size(); i++)
 		matrix[i] += o.matrix[i];
 }
 
 
 Matrix Matrix::operator-(const Matrix &o){
+	assert(this->get_size() == o.matrix.size());
 	Matrix out(width, height);
 	for (int i = 0; i < get_size(); i++)
 		out.matrix[i] = matrix[i] - o.matrix[i];
@@ -85,6 +90,7 @@ Matrix Matrix::operator-(const Matrix &o){
 }
 
 void Matrix::operator-=(const Matrix &o){
+	assert(this->get_size() == o.matrix.size());
 	for (int i = 0; i < get_size(); i++)
 		matrix[i] -= o.matrix[i];
 }
