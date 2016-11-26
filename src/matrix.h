@@ -3,16 +3,19 @@
 #include <vector>
 #include <stdio.h>
 #include <assert.h>
-
+#include <math.h>
+#include <random>
 class Matrix {
  private:
-
 	std::vector<double> matrix;
 	
 	int height;
 	int width;
-	
+
+ protected:
 	inline void set_direct_value(int i, double value) {matrix[i] = value;}
+	Matrix concatenate(Matrix& o);
+	Matrix subset_matrix(int start, int end);
 	
  public:
 	
@@ -29,8 +32,16 @@ class Matrix {
 	void operator-=(const Matrix &o);
 	Matrix operator+(const Matrix &o);
 	Matrix operator-(const Matrix &o);
+	Matrix operator*(const Matrix &o);
+	Matrix operator+(double scalar);
+	Matrix operator*(double scalar);
     Matrix& operator=(const Matrix &o);
-	Matrix dot(Matrix &o);
+	Matrix dot(Matrix o);
+	Matrix transpose();
+	Matrix& Mtanh();
+	Matrix& sigmoid();
+	void fill_gaussian(std::default_random_engine generator, double mean, double stddev);
+	void clear_matrix();
 };
 
 static inline void printMatrix(Matrix &o){

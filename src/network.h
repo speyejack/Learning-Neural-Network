@@ -1,12 +1,17 @@
-#include <blockMatrix.h>
+#ifndef NETWORK_HEADER_INCLUDED
+#define NETWORK_HEADER_INCLUDED
+#include <vector>
+#include "layer.h"
+#include <random>
+
 class Network{
-
+	
 private:
-
+	std::vector<Layer*> layers;
 public:
-	
-	Matrix& forward_prop(Matrix& input);
-	Matrix& back_prop(Matrix& error);
-	
-	
-}
+	Network(std::vector<int>, std::seed_seq);
+	std::vector<double> forward_prop(std::vector<double>& input);
+	void back_prop(std::vector<double>& error);
+	void apply_error(double learning_rate);
+};
+#endif

@@ -1,7 +1,8 @@
 SHELL = /bin/sh
 
 CC = g++
-CFLAGS = -Wall -Wextra -pedantic -Wwrite-strings
+CFLAGS = -Wall -Wextra -pedantic -Wwrite-strings -std=c++11
+CFLAGS = -std=c++11
 LDFLAGS = -lm
 BINARY = learnNN
 
