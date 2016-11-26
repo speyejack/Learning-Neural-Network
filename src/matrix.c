@@ -98,7 +98,7 @@ void Matrix::operator-=(const Matrix &o){
 Matrix Matrix::dot(Matrix o){
 	assert(this->width == o.height);
 
-	Matrix out(o.width, this->height);
+	Matrix out(this->height, o.width);
 	
 	for (int row = 0; row < this->height; row++){
 		
