@@ -28,8 +28,10 @@ std::vector<double> Network::forward_prop(std::vector<double>& input){
 
 void Network::back_prop(std::vector<double>& error){
 	Vector error_vec(error);
+	printf("Error: ");
+	printMatrix(error_vec);
 	for(int i = layers.size() - 1; i >= 0; i--){
-		error_vec = layers[i]->forward_prop(error_vec);
+		error_vec = layers[i]->back_prop(error_vec);
 	}
 }
 
