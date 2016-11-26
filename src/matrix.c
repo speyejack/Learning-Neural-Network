@@ -26,7 +26,7 @@ Matrix Matrix::concatenate(Matrix&o){
 Matrix Matrix::subset_matrix(int start, int end) {
 	Matrix m(end - start, 1);
 	for (int i = start; i < end; i++){
-		m.set_value(i, 0, get_direct_value(i));
+		m.set_direct_value(i, get_direct_value(i));
 	}
 	return m;
 }
