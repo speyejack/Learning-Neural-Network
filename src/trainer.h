@@ -13,7 +13,7 @@ private:
 	Network* net;
 
 protected:
-
+	int get_batch_size(){return batch_size;}
 public:
 	Trainer(Network*, int, double);
 	std::vector<double> train(std::vector<double>& input, std::vector<double>& correct_output);
