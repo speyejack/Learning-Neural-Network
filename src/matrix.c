@@ -146,7 +146,7 @@ Matrix& Matrix::sigmoid(){
 	for (int i = 0; i < get_size(); i++){
 		double val = get_direct_value(i);
 		// Fast sigmoid function, if having trouble chance to realistic
-		val = val / (1 + abs(val));
+		val = 1 / (1 + exp(-val));
 		set_direct_value(i,val);
 	}
 	return *this;
