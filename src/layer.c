@@ -12,7 +12,7 @@ Layer::Layer(int input_size, int output_size, std::default_random_engine gen){
 	output_w = new Matrix(output_size, true_input_size);
 	memory = new Vector(output_size);
 
-	state = {0};
+	state = {0, 0, 0, 0, 0, 0, 0, 0};
 	
 	state.prev_output = new Vector(output_size);
 	state.prev_output->clear_matrix();
@@ -29,6 +29,19 @@ Layer::Layer(int input_size, int output_size, std::default_random_engine gen){
 
 	this->input_size = input_size;
 	this->output_size = output_size;
+}
+
+Layer::~Layer(){
+	clear_state();
+	delete forget_w;
+	delete activate_w;
+	delete input_w;
+	delete output_w;
+	delete memory;
+	delete error.err_input_w;
+	delete error.err_activate_w;
+	delete error.err_forget_w;
+	delete error.err_output_w;
 }
 
 void Layer::clear_state(){
