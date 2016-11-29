@@ -47,7 +47,7 @@ class Matrix {
 static inline void printMatrix(Matrix &o){
 	printf("{{");
 	for (int i = 0; i < o.get_size(); i++){
-		printf("%f", o.get_direct_value(i));
+		printf("%.1f", o.get_direct_value(i));
 		if (i == (o.get_size() - 1))
 			printf("}");
 	   
