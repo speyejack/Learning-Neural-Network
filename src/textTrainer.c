@@ -2,17 +2,17 @@
 #include <vector>
 #include <string>
 #include <fstream>
-#include <sstream>
+#include <streambuf>
 #include <ios>
+#include <iostream>
 #include "network.h"
 #include "trainer.h"
+#include "vector.h"
 
 TextTrainer::TextTrainer(Network* net, int batch, double learning_rate, std::string filename): Trainer(net, batch, learning_rate){
 	std::ifstream t(filename);
-	std::stringstream buffer;
-	buffer << t.rdbuf();
+	file.assign((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
 
-	file = buffer.str();
 	file_size = file.length();
 	index = 0;
 }
@@ -22,6 +22,11 @@ void TextTrainer::train(){
 	input.resize(128);
 	std::vector<double> output;
 	output.resize(128);
+	
+	if ( file_size < get_batch_size() + index + 2){
+		index = 0;
+	}
+	
 	for (int i = 0; i < get_batch_size(); i++){
 		input[file[index + i]] = 1;
 		output[file[index + i + 1]] = 1;
@@ -29,12 +34,11 @@ void TextTrainer::train(){
 		input[file[index + i]] = 0;
 		output[file[index + i + 1]] = 0;
 	}
-	if (get_batch_size() + index >= file_size){
-		index = 0;
-	}
+	index++;
 }
 
-char TextTrainer::sample(char input){
+char TextTrainer::sample(char input, bool* small, double small_threshold){
+	*small = false;
 	std::vector<double> input_v;
 	input_v.resize(128);
 	if (input != -1){
@@ -42,11 +46,43 @@ char TextTrainer::sample(char input){
 	}
 	std::vector<double> output;
 	output = net->forward_prop(input_v);
-	for (int i = 0; i < 128; i++){
-		if (output[i] > 0.95)
-			return i;
-
-	}
-	return 0;
+	int top = 0;
 	
+	for (int i = 0; i < 128; i++){
+		if (output[i] > output[top]){
+			top = i;
+		}
+	}
+	if (small != NULL){
+		if (output[top] < small_threshold){
+			*small = true;
+		} else {
+			*small = false;
+		}
+	}
+	return top;
+}
+
+char TextTrainer::sample(char input){
+	return sample(input, NULL, 0);
+}
+
+
+std::string TextTrainer::sample_string(int size){
+	std::string str("_", size);
+	char c = -1;
+	char o = -1;
+	bool small = false;
+	for (int i = 0; i < size; i++){
+		c = sample(c, &small, 0.3);
+		
+		if (small)
+			o = 124;
+		else if (c < 32)
+			o = 95;
+		else
+			o = c;
+		str[i] = o;
+	}
+	return str;
 }
