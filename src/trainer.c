@@ -27,7 +27,7 @@ std::vector<double> Trainer::train(std::vector<double>& input, std::vector<doubl
 std::vector<double> Trainer::get_error(std::vector<double>& output, std::vector<double>& correct_output){
     std::vector<double> error(correct_output);
 	
-	for (int i = 0; i < error.size(); i++){
+	for (unsigned int i = 0; i < error.size(); i++){
 		error[i] -= output[i];
 	}
 	return error;
