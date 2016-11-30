@@ -1,3 +1,5 @@
+#ifndef TEXT_TRAINER_HEADER_INCLUDED
+#define TEXT_TRAINER_HEADER_INCLUDED
 #include <string>
 #include "network.h"
 #include "trainer.h"
@@ -11,3 +13,4 @@ public:
 	void train();
 	char sample(char);
 };
+#endif
