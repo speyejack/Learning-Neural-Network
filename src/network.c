@@ -50,7 +50,7 @@ void Network::apply_error(double learning_rate){
 void Network::write_to_json(std::ostream& os){
 	os << "{" << std::endl;
 	os << "\"Layers\" : " << layers.size() << std::endl;
-	for(int i = 0; i < layers.size(); i++){
+	for(unsigned int i = 0; i < layers.size(); i++){
 		os << "\"Layer\" : " << *layers[i] << std::endl ;
 	}
 	os << "}" << std::endl;
