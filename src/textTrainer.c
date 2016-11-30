@@ -18,10 +18,8 @@ TextTrainer::TextTrainer(Network* net, int batch, double learning_rate, std::str
 }
 
 void TextTrainer::train(){
-	std::vector<double> input;
-	input.resize(128);
-	std::vector<double> output;
-	output.resize(128);
+	std::vector<double> input(128, 0);
+	std::vector<double> output(128, 0);
 	
 	if ( file_size < get_batch_size() + index + 2){
 		index = 0;
@@ -38,13 +36,11 @@ void TextTrainer::train(){
 }
 
 char TextTrainer::sample(char input, bool* small, double small_threshold){
-	*small = false;
-	std::vector<double> input_v;
-	input_v.resize(128);
+	std::vector<double> input_v(128, 0);
 	if (input != -1){
 		input_v[input] = 1;
 	}
-	std::vector<double> output;
+	std::vector<double> output(128, 0);
 	output = net->forward_prop(input_v);
 	int top = 0;
 	
@@ -68,9 +64,9 @@ char TextTrainer::sample(char input){
 }
 
 
-std::string TextTrainer::sample_string(int size){
+std::string TextTrainer::sample_string(char first, int size){
 	std::string str("_", size);
-	char c = -1;
+	char c = first;
 	char o = -1;
 	bool small = false;
 	for (int i = 0; i < size; i++){

@@ -10,7 +10,7 @@ private:
 public:
 	TextTrainer(Network*, int, double, std::string);
 	void train();
-	std::string sample_string(int);
+	std::string sample_string(char, int);
 	char sample(char);
 	char sample(char, bool*, double);
 };
