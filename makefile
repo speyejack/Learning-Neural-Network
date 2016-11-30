@@ -43,3 +43,6 @@ debug: clean
 
 optimize: clean 
 	$(CC) $(CFLAGS) $(LDFLAGS) $(SOURCES) -o $(BINARY) $(OPTFLAG)
+
+reoptimize: clean optimize
+	./$(BINARY)
