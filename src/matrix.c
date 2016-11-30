@@ -41,7 +41,7 @@ Matrix& Matrix::operator=(const Matrix &o){
 }
 
 Matrix Matrix::operator+(const Matrix &o){
-	assert(this->get_size() == o.matrix.size());
+	assert(this->get_size() == (int) o.matrix.size());
 	Matrix out(height, width);
 	for (int i = 0; i < get_size(); i++){
 		out.matrix[i] = matrix[i] + o.matrix[i];
@@ -50,7 +50,7 @@ Matrix Matrix::operator+(const Matrix &o){
 }
 
 Matrix Matrix::operator*(const Matrix &o){
-	assert(this->get_size() == o.matrix.size());
+	assert(this->get_size() == (int) o.matrix.size());
 	Matrix out(height, width);
 	for (int i = 0; i < get_size(); i++){
 		out.matrix[i] = matrix[i] * o.matrix[i];
@@ -75,14 +75,14 @@ Matrix Matrix::operator*(double scalar){
 }
 
 void Matrix::operator+=(const Matrix &o){
-	assert(this->get_size() == o.matrix.size());
+	assert(this->get_size() == (int) o.matrix.size());
 	for (int i = 0; i < get_size(); i++)
 		matrix[i] += o.matrix[i];
 }
 
 
 Matrix Matrix::operator-(const Matrix &o){
-	assert(this->get_size() == o.matrix.size());
+	assert(this->get_size() == (int) o.matrix.size());
 	Matrix out(width, height);
 	for (int i = 0; i < get_size(); i++)
 		out.matrix[i] = matrix[i] - o.matrix[i];
@@ -90,7 +90,7 @@ Matrix Matrix::operator-(const Matrix &o){
 }
 
 void Matrix::operator-=(const Matrix &o){
-	assert(this->get_size() == o.matrix.size());
+	assert(this->get_size() == (int) o.matrix.size());
 	for (int i = 0; i < get_size(); i++)
 		matrix[i] -= o.matrix[i];
 }
@@ -154,7 +154,7 @@ Matrix& Matrix::sigmoid(){
 
 
 void Matrix::fill_gaussian(std::default_random_engine generator, double mean, double stddev){
-	std::normal_distribution<double> dist(0.0, 1.0);
+	std::normal_distribution<double> dist(mean, stddev);
 	for (int i = 0; i < get_size(); i++){
 		set_direct_value(i, dist(generator));
 	}

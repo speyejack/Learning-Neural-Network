@@ -47,5 +47,4 @@ class Matrix {
 };
 
 std::ostream& operator<<(std::ostream&, Matrix&);
-
 #endif

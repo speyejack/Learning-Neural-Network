@@ -2,7 +2,7 @@
 #include <vector>
 
 Vector::Vector(const std::vector<double> init): Matrix(init.size(), 1){
-	for (int i = 0; i < init.size(); i++){
+	for (unsigned int i = 0; i < init.size(); i++){
 		set_direct_value(i, init[i]);
 	}
 }

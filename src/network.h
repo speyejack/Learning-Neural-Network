@@ -11,6 +11,7 @@ private:
 	std::vector<Layer*> layers;
 public:
 	Network(std::vector<int>, std::seed_seq);
+	~Network();
 	std::vector<double> forward_prop(std::vector<double>& input);
 	void back_prop(std::vector<double>& error);
 	void apply_error(double learning_rate);
