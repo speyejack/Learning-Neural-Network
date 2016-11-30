@@ -165,3 +165,20 @@ void Matrix::clear_matrix(){
 		set_direct_value(i, 0);
 	}
 }
+
+void Matrix::write_to_json(std::ostream& os){
+	os << "{" << std::endl;
+	os << "\"height\" : " << height << std::endl;
+	os << "\"width\" : " << width << std::endl;
+	os << "\"matrix\" : {";
+	for (unsigned int i = 0; i < matrix.size() - 1; i++){
+		os << matrix[i] << ", ";
+	}
+	os << matrix[matrix.size() - 1] << "}" << std::endl;
+	os << "}";
+}
+
+std::ostream& operator<<(std::ostream& os, Matrix& matrix){
+	matrix.write_to_json(os);
+	return os;
+}

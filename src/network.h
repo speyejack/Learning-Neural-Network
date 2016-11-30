@@ -3,6 +3,7 @@
 #include <vector>
 #include "layer.h"
 #include <random>
+#include <ostream>
 
 class Network{
 	
@@ -13,5 +14,8 @@ public:
 	std::vector<double> forward_prop(std::vector<double>& input);
 	void back_prop(std::vector<double>& error);
 	void apply_error(double learning_rate);
+	void write_to_json(std::ostream& os);
 };
+
+std::ostream& operator<<(std::ostream& os, Network& net);
 #endif

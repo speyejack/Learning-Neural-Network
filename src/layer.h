@@ -3,6 +3,7 @@
 #include "matrix.h"
 #include "vector.h"
 #include <random>
+#include <ostream>
 
 typedef struct State {
 	Vector* prev_input;
@@ -46,6 +47,8 @@ public:
 	Vector back_prop(Vector& error);
 	void apply_error(double learning_rate);
 	void reset();
+	void write_to_json(std::ostream&);
 };
 
+std::ostream& operator<<(std::ostream&, Layer&);
 #endif

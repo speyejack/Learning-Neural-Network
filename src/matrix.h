@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <math.h>
 #include <random>
+#include <ostream>
 class Matrix {
  private:
 	std::vector<double> matrix;
@@ -42,22 +43,9 @@ class Matrix {
 	Matrix& sigmoid();
 	void fill_gaussian(std::default_random_engine generator, double mean, double stddev);
 	void clear_matrix();
+	void write_to_json(std::ostream&);
 };
 
-static inline void printMatrix(Matrix &o){
-	printf("{{");
-	for (int i = 0; i < o.get_size(); i++){
-		printf("%f", o.get_direct_value(i));
-		if (i == (o.get_size() - 1))
-			printf("}");
-	   
-		else if ((i + 1) % o.get_width() == 0)
-			printf("},{");
-		else
-			printf(",");
-			
-	}
-	printf("}\n");
-	// printf("W: %d H: %d S: %d\n", o.get_width(), o.get_height(), o.get_size());
-}
+std::ostream& operator<<(std::ostream&, Matrix&);
+
 #endif
