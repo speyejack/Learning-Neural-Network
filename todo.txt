@@ -1,0 +1,4 @@
+Add momentum to training
+Add self adjusting learning rate
+Add importing of network
+Check back prop through multiple layers
