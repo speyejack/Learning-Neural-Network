@@ -41,7 +41,7 @@ class Matrix {
 	Matrix transpose();
 	Matrix& Mtanh();
 	Matrix& sigmoid();
-	void fill_gaussian(std::default_random_engine generator, double mean, double stddev);
+	void fill_gaussian(std::default_random_engine& generator, double mean, double stddev);
 	void clear_matrix();
 	void write_to_json(std::ostream&);
 };

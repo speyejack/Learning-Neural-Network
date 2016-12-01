@@ -153,7 +153,7 @@ Matrix& Matrix::sigmoid(){
 }
 
 
-void Matrix::fill_gaussian(std::default_random_engine generator, double mean, double stddev){
+void Matrix::fill_gaussian(std::default_random_engine& generator, double mean, double stddev){
 	std::normal_distribution<double> dist(mean, stddev);
 	for (int i = 0; i < get_size(); i++){
 		set_direct_value(i, dist(generator));

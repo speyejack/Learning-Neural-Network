@@ -5,7 +5,7 @@
 #include <ostream>
 
 
-Layer::Layer(int input_size, int output_size, std::default_random_engine gen){
+Layer::Layer(int input_size, int output_size, std::default_random_engine& gen){
 	int true_input_size = input_size + output_size + 1;
 	input_w = new Matrix(output_size, true_input_size);
 	activate_w = new Matrix(output_size, true_input_size);

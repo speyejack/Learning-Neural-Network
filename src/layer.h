@@ -40,7 +40,7 @@ private:
 	
 public:
 	
-	Layer(int input_size, int output_size, std::default_random_engine gen);
+	Layer(int input_size, int output_size, std::default_random_engine& gen);
 	~Layer();
 	int get_input_size(){return input_size;};
 	int get_output_size(){return output_size;};
