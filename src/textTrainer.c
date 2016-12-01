@@ -20,17 +20,16 @@ TextTrainer::TextTrainer(Network* net, int batch, double learning_rate, std::str
 void TextTrainer::train(){
 	std::vector<double> input(128, 0);
 	std::vector<double> output(128, 0);
-	
-	if ( file_size < get_batch_size() + index + 2){
-		index = 0;
-	}
-	
+   
 	for (int i = 0; i < get_batch_size(); i++){
 		char char_loc = file[index + i];
-		char next_char_loc = file[index + i];
+		char next_char_loc = file[index + i + 1];
 		assert(char_loc >= 0);
 		assert(next_char_loc >= 0);
 		
+		if (next_char_loc == 0){
+			index = -1;
+		}
 		input[char_loc] = 1;
 		output[next_char_loc] = 1;
 		Trainer::train(input, output);
