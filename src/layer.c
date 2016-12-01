@@ -18,10 +18,10 @@ Layer::Layer(int input_size, int output_size, std::default_random_engine& gen){
 	state.prev_output = new Vector(output_size);
 	state.prev_output->clear_matrix();
 
-	input_w->fill_gaussian(gen, 0.0, 1.0);
-	activate_w->fill_gaussian(gen, 0.0, 1.0);
-	forget_w->fill_gaussian(gen, 0.0, 1.0);
-	output_w->fill_gaussian(gen, 0.0, 1.0);
+	input_w->fill_gaussian(gen, 0.0, 0.1);
+	activate_w->fill_gaussian(gen, 0.0, 0.1);
+	forget_w->fill_gaussian(gen, 0.0, 0.1);
+	output_w->fill_gaussian(gen, 0.0, 0.1);
 	
 	error.err_input_w = new Matrix(output_size, true_input_size);
 	error.err_activate_w = new Matrix(output_size, true_input_size);
