@@ -144,13 +144,13 @@ void Layer::reset(){
 
 void Layer::write_to_json(std::ostream& os){
 	os << "{" << std::endl;
-	os << "\"input size\" : " << input_size << std::endl;
-	os << "\"output size\" : " << output_size << std::endl;
-	os << "\"weights\" : {";
-	os << "\"input_w\" : " << *input_w << std::endl;
-	os << "\"activate_w\" : " << *activate_w << std::endl;
-	os << "\"forget_w\" : " << *forget_w << std::endl;
-	os << "\"output_w\" : " << *output_w << std::endl;
+	os << "\"input size\" : " << input_size << ',' << std::endl;
+	os << "\"output size\" : " << output_size << ',' << std::endl;
+	os << "\"weights\" : {" << std::endl;
+	os << "\"input_w\" : " << *input_w << ',' << std::endl;
+	os << "\"activate_w\" : " << *activate_w << ',' << std::endl;
+	os << "\"forget_w\" : " << *forget_w << ',' << std::endl;
+	os << "\"output_w\" : " << *output_w << ',' << std::endl;
 	os << "}" << std::endl;
 	os << "}";
 }

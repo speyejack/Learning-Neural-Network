@@ -168,8 +168,8 @@ void Matrix::clear_matrix(){
 
 void Matrix::write_to_json(std::ostream& os){
 	os << "{" << std::endl;
-	os << "\"height\" : " << height << std::endl;
-	os << "\"width\" : " << width << std::endl;
+	os << "\"height\" : " << height << ',' << std::endl;
+	os << "\"width\" : " << width << ',' << std::endl;
 	os << "\"matrix\" : {";
 	for (unsigned int i = 0; i < matrix.size() - 1; i++){
 		os << matrix[i] << ", ";

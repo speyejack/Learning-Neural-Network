@@ -51,12 +51,12 @@ void Network::apply_error(double learning_rate){
 
 void Network::write_to_json(std::ostream& os){
 	os << "{" << std::endl;
-	os << "\"Seed Size\" : " << seed.size() << std::endl;
+	os << "\"Seed Size\" : " << seed.size() << "," << std::endl;
 	std::ostream_iterator<unsigned> seed_out(os, " "); 
-	os << "\"Seed\" : {"; seed.param(seed_out); os << "}" << std::endl;
-	os << "\"Layers\" : " << layers.size() << std::endl;
+	os << "\"Seed\" : {"; seed.param(seed_out); os << "}," << std::endl;
+	os << "\"Layers\" : " << layers.size() << "," << std::endl;
 	for(unsigned int i = 0; i < layers.size(); i++){
-		os << "\"Layer\" : " << *layers[i] << std::endl ;
+		os << "\"Layer\" : " << *layers[i] << "," << std::endl ;
 	}
 	os << "}" << std::endl;
 }
