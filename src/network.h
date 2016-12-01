@@ -9,6 +9,7 @@ class Network{
 	
 private:
 	std::vector<Layer*> layers;
+	std::seed_seq seed;
 public:
 	Network(std::vector<int>, std::seed_seq);
 	~Network();

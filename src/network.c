@@ -3,8 +3,10 @@
 #include <assert.h>
 #include <random>
 #include <ostream>
+#include <iterator>
 
 Network::Network(std::vector<int> layer_sizes, std::seed_seq seed){
+	this->seed = seed;
 	std::default_random_engine gen(seed);
 	layers.resize(layer_sizes.size() - 1);
 	// Not enough layers
@@ -49,6 +51,9 @@ void Network::apply_error(double learning_rate){
 
 void Network::write_to_json(std::ostream& os){
 	os << "{" << std::endl;
+	os << "\"Seed Size\" : " << seed.size() << std::endl;
+	std::ostream_iterator<unsigned> seed_out(os, " "); 
+	os << "\"Seed\" : {"; seed.param(seed_out); os << "}" << std::endl;
 	os << "\"Layers\" : " << layers.size() << std::endl;
 	for(unsigned int i = 0; i < layers.size(); i++){
 		os << "\"Layer\" : " << *layers[i] << std::endl ;
