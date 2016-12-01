@@ -26,11 +26,16 @@ void TextTrainer::train(){
 	}
 	
 	for (int i = 0; i < get_batch_size(); i++){
-		input[file[index + i]] = 1;
-		output[file[index + i + 1]] = 1;
+		char char_loc = file[index + i];
+		char next_char_loc = file[index + i];
+		assert(char_loc >= 0);
+		assert(next_char_loc >= 0);
+		
+		input[char_loc] = 1;
+		output[next_char_loc] = 1;
 		Trainer::train(input, output);
-		input[file[index + i]] = 0;
-		output[file[index + i + 1]] = 0;
+		input[char_loc] = 0;
+		output[next_char_loc] = 0;
 	}
 	index++;
 }
