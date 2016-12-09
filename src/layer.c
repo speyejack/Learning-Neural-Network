@@ -6,11 +6,14 @@
 
 
 Layer::Layer(int input_size, int output_size, std::default_random_engine& gen){
+	this->input_size = input_size;
+	this->output_size = output_size;
+	
 	int true_input_size = input_size + output_size + 1;
-	input_w = new Matrix(output_size, true_input_size);
-	activate_w = new Matrix(output_size, true_input_size);
-	forget_w = new Matrix(output_size, true_input_size);
-	output_w = new Matrix(output_size, true_input_size);
+	input_w = create_weights(output_size, input_size, gen, 0, 0.1);
+	activate_w = create_weights(output_size, input_size, gen, 0, 0.1);
+	forget_w = create_weights(output_size, input_size, gen, 0, 0.1);
+	output_w = create_weights(output_size, input_size, gen, 0, 0.1);
 	memory = new Vector(output_size);
 
 	state = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -18,26 +21,19 @@ Layer::Layer(int input_size, int output_size, std::default_random_engine& gen){
 	state.prev_output = new Vector(output_size);
 	state.prev_output->clear_matrix();
 
-	input_w->fill_gaussian(gen, 0.0, 0.1);
-	activate_w->fill_gaussian(gen, 0.0, 0.1);
-	forget_w->fill_gaussian(gen, 0.0, 0.1);
-	output_w->fill_gaussian(gen, 0.0, 0.1);
-	
+	// This error accumulation method is going away...
 	error.err_input_w = new Matrix(output_size, true_input_size);
 	error.err_activate_w = new Matrix(output_size, true_input_size);
 	error.err_forget_w = new Matrix(output_size, true_input_size);
 	error.err_output_w = new Matrix(output_size, true_input_size);
-
-	this->input_size = input_size;
-	this->output_size = output_size;
 }
 
 Layer::~Layer(){
-	clear_state();
-	delete forget_w;
-	delete activate_w;
-	delete input_w;
-	delete output_w;
+	delete_state();
+	delete_weights(forget_w);
+	delete_weights(activate_w);
+	delete_weights(input_w);
+	delete_weights(output_w);
 	delete memory;
 	delete error.err_input_w;
 	delete error.err_activate_w;
@@ -45,7 +41,7 @@ Layer::~Layer(){
 	delete error.err_output_w;
 }
 
-void Layer::clear_state(){
+void Layer::delete_state(){
 	delete state.prev_input;
 	delete state.prev_output;
 	delete state.prev_mem;
@@ -54,6 +50,13 @@ void Layer::clear_state(){
 	delete state.forget_gate;
 	delete state.output_gate;
 	delete state.activate_prim;
+}
+
+void Layer::delete_weights(Weights w){
+	delete w.input_w;
+	delete w.output_w;
+	delete w.state_w;
+	delete w.bias_w;
 }
 
 Vector Layer::forward_prop(Vector& input){
@@ -153,6 +156,20 @@ void Layer::write_to_json(std::ostream& os){
 	os << "\"output_w\" : " << *output_w << ',' << std::endl;
 	os << "}" << std::endl;
 	os << "}";
+}
+
+Weights Layer::create_weights(int output_size, int input_size, std::default_random_engine& gen, double mean, double stddev){
+	Weights w = {0, 0, 0, 0};
+	w.input_w = new Matrix(output_size, input_size);
+	w.output_w = new Matrix(output_size, output_size);
+	w.state_w = new Matrix(output_size, output_size);
+	w.bias_w = new Matrix(output_size, 1);
+	
+	w.input_w->fill_gaussian(gen, mean, stddev);
+	w.output_w->fill_gaussian(gen, mean, stddev);
+	w.state_w->fill_gaussian(gen, mean, stddev);
+	w.bias_w->fill_gaussian(gen, mean, stddev);
+	return w;
 }
 
 std::ostream& operator<<(std::ostream& os, Layer& layer){

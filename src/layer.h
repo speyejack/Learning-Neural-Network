@@ -10,7 +10,7 @@ typedef struct Weights{
 	Matrix* output_w;
 	Matrix* state_w;
 	Matrix* bias_w;
-}
+}Weights;
 
 typedef struct State {
 	Vector* prev_input;
@@ -35,15 +35,17 @@ class Layer{
 private:
 	int input_size;
 	int output_size;
-	Weights* forget_w;
-    Weights* activate_w;
-    Weights* input_w;
-	Weights* output_w;
+	Weights forget_w;
+    Weights activate_w;
+    Weights input_w;
+	Weights output_w;
 	Vector* memory;
 	State state;
 	Error error;
 	void clear_error();
-	void clear_state();
+	void delete_state();
+	void delete_weights(Weights w);
+	Weights create_weights(int, int, std::default_random_engine&, double, double);
 	
 public:
 	
