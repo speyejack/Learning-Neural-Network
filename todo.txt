@@ -1,4 +1,9 @@
+Needs Implementing:
 Add momentum to training
 Add self adjusting learning rate
 Add importing of network
+Add error reporting
+
+Needs checking:
 Check back prop through multiple layers
+
