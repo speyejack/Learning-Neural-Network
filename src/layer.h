@@ -5,6 +5,13 @@
 #include <random>
 #include <ostream>
 
+typedef struct Weights{
+	Matrix* input_w;
+	Matrix* output_w;
+	Matrix* state_w;
+	Matrix* bias_w;
+}
+
 typedef struct State {
 	Vector* prev_input;
 	Vector* prev_output;
@@ -17,10 +24,10 @@ typedef struct State {
 }State;
 
 typedef struct Error {
-	Matrix* err_input_w;
-	Matrix* err_activate_w;
-	Matrix* err_forget_w;
-	Matrix* err_output_w;
+	Weights* err_input_w;
+    Weights* err_activate_w;
+    Weights* err_forget_w;
+    Weights* err_output_w;
 }Error;
 
 
@@ -28,10 +35,10 @@ class Layer{
 private:
 	int input_size;
 	int output_size;
-	Matrix* forget_w;
-	Matrix* activate_w;
-	Matrix* input_w;
-	Matrix* output_w;
+	Weights* forget_w;
+    Weights* activate_w;
+    Weights* input_w;
+	Weights* output_w;
 	Vector* memory;
 	State state;
 	Error error;
