@@ -38,7 +38,7 @@ retest: rebuild
 	./$(BINARY)
 
 debug: clean
-	$(CC) $(SOURCES) -o $(BINARY) $(CFLAGS) $(LDFLAGS) -g
+	$(CC) $(SOURCES) -o $(BINARY) $(CFLAGS) $(LDFLAGS) -ggdb
 	gdb ./$(BINARY)
 
 optimize: clean 
