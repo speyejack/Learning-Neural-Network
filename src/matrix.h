@@ -39,8 +39,8 @@ class Matrix {
     Matrix& operator=(const Matrix &o);
 	Matrix dot(Matrix o);
 	Matrix transpose();
-	Matrix& Mtanh();
-	Matrix& sigmoid();
+	Matrix Mtanh();
+	Matrix sigmoid();
 	void fill_gaussian(std::default_random_engine& generator, double mean, double stddev);
 	void clear_matrix();
 	void write_to_json(std::ostream&);

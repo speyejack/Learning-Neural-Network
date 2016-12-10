@@ -132,24 +132,26 @@ Matrix Matrix::transpose(){
 }
 
 
-Matrix& Matrix::Mtanh(){
+Matrix Matrix::Mtanh(){
+	Matrix out(width, height);
 	for (int i = 0; i < get_size(); i++){
 		double val = get_direct_value(i);
 		val = tanh(val);
-		set_direct_value(i,val);
+		out.set_direct_value(i,val);
 	}
-	return *this;
+	return out;
 }
 
 
-Matrix& Matrix::sigmoid(){
+Matrix Matrix::sigmoid(){
+	Matrix out(width, height);
 	for (int i = 0; i < get_size(); i++){
 		double val = get_direct_value(i);
 		// Fast sigmoid function, if having trouble chance to realistic
 		val = 1 / (1 + exp(-val));
-		set_direct_value(i,val);
+		out.set_direct_value(i,val);
 	}
-	return *this;
+	return out;
 }
 
 
