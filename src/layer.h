@@ -6,10 +6,10 @@
 #include <ostream>
 
 typedef struct Weights{
-	Matrix* input_w;
-	Matrix* output_w;
-	Matrix* state_w;
-	Matrix* bias_w;
+	Matrix* input;
+	Matrix* output;
+	Matrix* memory;
+	Matrix* bias;
 }Weights;
 
 typedef struct State {

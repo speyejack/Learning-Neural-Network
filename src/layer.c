@@ -9,7 +9,6 @@ Layer::Layer(int input_size, int output_size, std::default_random_engine& gen){
 	this->input_size = input_size;
 	this->output_size = output_size;
 	
-	int true_input_size = input_size + output_size + 1;
 	input_w = create_weights(output_size, input_size, gen, 0, 0.1);
 	activate_w = create_weights(output_size, input_size, gen, 0, 0.1);
 	forget_w = create_weights(output_size, input_size, gen, 0, 0.1);
@@ -20,12 +19,6 @@ Layer::Layer(int input_size, int output_size, std::default_random_engine& gen){
 	
 	state.prev_output = new Vector(output_size);
 	state.prev_output->clear_matrix();
-
-	// This error accumulation method is going away...
-	error.err_input_w = new Matrix(output_size, true_input_size);
-	error.err_activate_w = new Matrix(output_size, true_input_size);
-	error.err_forget_w = new Matrix(output_size, true_input_size);
-	error.err_output_w = new Matrix(output_size, true_input_size);
 }
 
 Layer::~Layer(){
@@ -42,6 +35,7 @@ Layer::~Layer(){
 }
 
 void Layer::delete_state(){
+	// May be changing structure of state
 	delete state.prev_input;
 	delete state.prev_output;
 	delete state.prev_mem;
@@ -53,92 +47,54 @@ void Layer::delete_state(){
 }
 
 void Layer::delete_weights(Weights w){
-	delete w.input_w;
-	delete w.output_w;
-	delete w.state_w;
-	delete w.bias_w;
+	delete w.input;
+	delete w.output;
+	delete w.memory;
+	delete w.bias;
 }
 
 Vector Layer::forward_prop(Vector& input){
 	assert(input.get_height() == input_size);
+
 	Vector bias(1);
 	bias.set_value(0,0,1);
-	input = input.concatenate(*(state.prev_output)).concatenate(bias);
 	
-	clear_state();
+	Matrix input_g_p = input_w.input->dot(input) + input_w.output->dot(*state.prev_output) + input_w.memory->dot(*memory) + input_w.bias->dot(bias);
+	Matrix input_g = input_g_p.sigmoid();
+
+	Matrix forget_g_p = forget_w.input->dot(input) + forget_w.output->dot(*state.prev_output) + forget_w.memory->dot(*memory) + forget_w.bias->dot(bias);
+	Matrix forget_g = forget_g_p.sigmoid();
+
+	Matrix activation_g_p = activate_w.input->dot(input) + activate_w.output->dot(*state.prev_output) + activate_w.bias->dot(bias);
+	Matrix activation_g = activation_g_p;
+	activation_g.Mtanh();
+
 	
-	state.prev_input = new Vector(input);
-	Matrix input_gate = input_w->dot(input).sigmoid();
-	state.activate_prim = new Matrix(activate_w->dot(input));
-	Matrix activate_gate = state.activate_prim->Mtanh();
-	Matrix forget_gate = forget_w->dot(input).sigmoid();
-	Matrix output_gate = output_w->dot(input).sigmoid();
+	*memory = (Vector) (forget_g * *memory + input_g * activation_g);
+	Vector activated_mem = *memory;
+    activated_mem.Mtanh();
 
-	state.input_gate = new Matrix(input_gate);
-	state.activate_gate = new Matrix(activate_gate);
-	state.forget_gate = new Matrix(forget_gate);
-	state.output_gate = new Matrix(output_gate);
-	state.prev_mem = new Vector(*memory);
+	
+	Matrix output_g_p = output_w.input->dot(input) + output_w.output->dot(*state.prev_output) + output_w.memory->dot(*memory) + output_w.bias->dot(bias);
+	Matrix output_g = output_g_p.sigmoid();
 
-	*memory = (Vector) (input_gate * activate_gate + forget_gate * *memory);
-	Vector tanhMem = *memory;
-	tanhMem.Mtanh();
-	Vector output = output_gate * tanhMem;
+	Vector output = (Vector) (output_g * activated_mem);
+
 	state.prev_output = new Vector(output);
 	return output;
 }
 
 Vector Layer::back_prop(Vector& error){
-	Vector tanhMem = *memory;
-	tanhMem.Mtanh();
-	Matrix del_output = error * tanhMem;
-	Matrix del_mem = error * *(state.output_gate) * (((tanhMem * tanhMem) * -1.0) + 1.0);
-	
-	Matrix del_inputg = del_mem * *(state.activate_gate);
-	Matrix del_forget = del_mem * *(state.prev_mem);
-	Matrix del_activate = del_mem * *(state.input_gate);
-	Matrix del_mem_prev = del_mem * *(state.forget_gate);
-
-	Matrix tanhA = *(state.activate_prim);
-	tanhA.Mtanh();
-	
-	Matrix del_activate_prim = del_activate * (((tanhA * tanhA) * -1) + 1);
-	Matrix del_input_prim = del_inputg * *(state.input_gate) * (*(state.input_gate) * -1 + 1);
-	Matrix del_forget_prim = del_forget* *(state.forget_gate) * (*(state.forget_gate) * -1 + 1);
-	Matrix del_output_prim = del_output* *(state.output_gate) * (*(state.output_gate) * -1 + 1);
-
-	Matrix del_input = input_w->transpose().dot(del_input_prim) +
-		activate_w->transpose().dot(del_activate_prim) +
-		forget_w->transpose().dot(del_forget_prim) + // Possible fix? maybe not
-		output_w->transpose().dot(del_output_prim);
-
-	Matrix prev_input = state.prev_input->transpose();
-	Matrix err_i_w = del_input_prim.dot(prev_input);
-	Matrix err_a_w = del_activate_prim.dot(prev_input);
-	Matrix err_f_w = del_forget_prim.dot(prev_input);
-	Matrix err_o_w = del_output_prim.dot(prev_input);
-
-	*(this->error.err_input_w) += err_i_w;
-	*(this->error.err_activate_w) += err_a_w;
-	*(this->error.err_forget_w) += err_f_w;
-	*(this->error.err_output_w) += err_o_w;
-
-	return ((Vector) del_input).subset(0, input_size);
+	// Changing how back prop works
+	return error;
 }
 
 void Layer::clear_error(){
-	error.err_input_w->clear_matrix();
-	error.err_activate_w->clear_matrix();
-	error.err_forget_w->clear_matrix();
-	error.err_output_w->clear_matrix();
+	// Changing how this error error prop works
 }
 
 void Layer::apply_error(double learning_rate){
-	*input_w += (*(error.err_input_w) * learning_rate);
-	*activate_w += (*(error.err_activate_w) * learning_rate);
-    *forget_w += (*(error.err_forget_w) * learning_rate);
-    *output_w += (*(error.err_output_w) * learning_rate);
-	clear_error();
+	// Changing how this error error prop works
 }
 
 void Layer::reset(){
@@ -150,25 +106,33 @@ void Layer::write_to_json(std::ostream& os){
 	os << "\"input size\" : " << input_size << ',' << std::endl;
 	os << "\"output size\" : " << output_size << ',' << std::endl;
 	os << "\"weights\" : {" << std::endl;
+	
+	// To make sure I fix this later
+	fprintf(stderr, "Error: Re-implement write to json feature for layer\n");
+	exit(1);
+	
+	/* Commented out to suppress compiler errors
 	os << "\"input_w\" : " << *input_w << ',' << std::endl;
 	os << "\"activate_w\" : " << *activate_w << ',' << std::endl;
 	os << "\"forget_w\" : " << *forget_w << ',' << std::endl;
 	os << "\"output_w\" : " << *output_w << ',' << std::endl;
+	*/
+	
 	os << "}" << std::endl;
 	os << "}";
 }
 
 Weights Layer::create_weights(int output_size, int input_size, std::default_random_engine& gen, double mean, double stddev){
 	Weights w = {0, 0, 0, 0};
-	w.input_w = new Matrix(output_size, input_size);
-	w.output_w = new Matrix(output_size, output_size);
-	w.state_w = new Matrix(output_size, output_size);
-	w.bias_w = new Matrix(output_size, 1);
+	w.input = new Matrix(output_size, input_size);
+	w.output = new Matrix(output_size, output_size);
+	w.memory = new Matrix(output_size, output_size);
+	w.bias = new Matrix(output_size, 1);
 	
-	w.input_w->fill_gaussian(gen, mean, stddev);
-	w.output_w->fill_gaussian(gen, mean, stddev);
-	w.state_w->fill_gaussian(gen, mean, stddev);
-	w.bias_w->fill_gaussian(gen, mean, stddev);
+	w.input->fill_gaussian(gen, mean, stddev);
+	w.output->fill_gaussian(gen, mean, stddev);
+	w.memory->fill_gaussian(gen, mean, stddev);
+	w.bias->fill_gaussian(gen, mean, stddev);
 	return w;
 }
 
