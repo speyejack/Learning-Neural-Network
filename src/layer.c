@@ -15,10 +15,8 @@ Layer::Layer(int input_size, int output_size, std::default_random_engine& gen){
 	output_w = create_weights(output_size, input_size, gen, 0, 0.1);
 	memory = new Vector(output_size);
 
-	state = {0, 0, 0, 0, 0, 0, 0, 0};
+	state = NULL;
 	
-	state.prev_output = new Vector(output_size);
-	state.prev_output->clear_matrix();
 }
 
 Layer::~Layer(){
@@ -56,31 +54,41 @@ void Layer::delete_weights(Weights w){
 Vector Layer::forward_prop(Vector& input){
 	assert(input.get_height() == input_size);
 
+	State* prev_state = state;
+	
+    state = new State();
+	err_state = NULL;
+	
 	Vector bias(1);
 	bias.set_value(0,0,1);
 	
-	Matrix input_g_p = input_w.input->dot(input) + input_w.output->dot(*state.prev_output) + input_w.memory->dot(*memory) + input_w.bias->dot(bias);
+	Matrix input_g_p = new Matrix(input_w.input->dot(input) + input_w.output->dot(*state->prev_state->output) + input_w.memory->dot(*memory) + input_w.bias->dot(bias));
 	Matrix input_g = input_g_p.sigmoid();
 
-	Matrix forget_g_p = forget_w.input->dot(input) + forget_w.output->dot(*state.prev_output) + forget_w.memory->dot(*memory) + forget_w.bias->dot(bias);
+	Matrix forget_g_p = forget_w.input->dot(input) + forget_w.output->dot(*state->prev_state->output) + forget_w.memory->dot(*memory) + forget_w.bias->dot(bias);
 	Matrix forget_g = forget_g_p.sigmoid();
 
-	Matrix activation_g_p = activate_w.input->dot(input) + activate_w.output->dot(*state.prev_output) + activate_w.bias->dot(bias);
-	Matrix activation_g = activation_g_p;
-	activation_g.Mtanh();
+	Matrix activation_g_p = activate_w.input->dot(input) + activate_w.output->dot(*state->prev_state->output) + activate_w.bias->dot(bias);
+	Matrix activation_g = activation_g_p.Mtanh();
+
+	memory = (Vector) (forget_g * *memory + input_g * activation_g);
+	Vector activated_mem = memory->Mtanh();
 
 	
-	*memory = (Vector) (forget_g * *memory + input_g * activation_g);
-	Vector activated_mem = *memory;
-    activated_mem.Mtanh();
-
-	
-	Matrix output_g_p = output_w.input->dot(input) + output_w.output->dot(*state.prev_output) + output_w.memory->dot(*memory) + output_w.bias->dot(bias);
+	Matrix output_g_p = output_w.input->dot(input) + output_w.output->dot(*state->prev_state->output) + output_w.memory->dot(*memory) + output_w.bias->dot(bias);
 	Matrix output_g = output_g_p.sigmoid();
 
 	Vector output = (Vector) (output_g * activated_mem);
 
-	state.prev_output = new Vector(output);
+	
+	state.prev_state = prev_state;
+	state.memory = new Vector(memory);
+	state.output = new Vector(output);
+	state.input_gateP = new Matrix(input_g_p);
+	state.forget_gateP = new Matrix(forget_g_p);
+	state.activation_gateP = new Matrix(activation_g_p);
+	state.output_gateP = new Matrix(output_gateP);
+	
 	return output;
 }
 
