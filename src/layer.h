@@ -10,28 +10,28 @@ typedef struct Weights{
 	Matrix* output;
 	Matrix* memory;
 	Matrix* bias;
-}Weights;
+} Weights;
+
+typedef struct ErrorState {
+	Matrix* error_input;
+	Matrix* error_forget;
+	Matrix* error_output;
+	Matrix* error_memory;
+	Matrix* forget_gate;
+} ErrorState;
 
 typedef struct State {
-	Vector* prev_input;
-	Vector* prev_output;
-	Vector* prev_mem;
-    Matrix* input_gate;
-    Matrix* activate_gate;
-	Matrix* forget_gate;
-	Matrix* output_gate;
-	Matrix* activate_prim;
-}State;
+	State* prev_state;
+	ErrorState* err_state;
+	Vector* memory;
+	Vector* output;
+	Matrix* input_gateP;
+	Matrix* forget_gateP;
+	Matrix* activation_gateP;
+	Matrix* output_gateP;
+} State;
 
-typedef struct Error {
-	Weights* err_input_w;
-    Weights* err_activate_w;
-    Weights* err_forget_w;
-    Weights* err_output_w;
-}Error;
-
-
-class Layer{
+class Layer {
 private:
 	int input_size;
 	int output_size;
@@ -40,8 +40,7 @@ private:
     Weights input_w;
 	Weights output_w;
 	Vector* memory;
-	State state;
-	Error error;
+	State* state;
 	void clear_error();
 	void delete_state();
 	void delete_weights(Weights w);
@@ -53,6 +52,7 @@ public:
 	~Layer();
 	int get_input_size(){return input_size;};
 	int get_output_size(){return output_size;};
+
 	
 	Vector forward_prop(Vector& input);
 	Vector back_prop(Vector& error);
