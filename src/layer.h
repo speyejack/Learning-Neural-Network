@@ -12,10 +12,23 @@ typedef struct Weights{
 	Matrix* bias;
 } Weights;
 
+typedef struct ErrorMatrix{
+	Matrix* output;
+	Matrix* memory;
+} ErrorMatrix;
+
+inline static ErrorMatrix* createErrorMatrix(int size){
+	ErrorMatrix* err = new ErrorMatrix();
+	err->output = new Vector(size);
+	err->memory = new Vector(size);
+	return err;
+}
+
 typedef struct ErrorState {
-	Matrix* error_input;
-	Matrix* error_forget;
-	Matrix* error_output;
+	ErrorMatrix* error_input;
+	ErrorMatrix* error_forget;
+	ErrorMatrix* error_activate;
+	// ErrorMatrix* error_output;
 	Matrix* error_memory;
 	Matrix* forget_gate;
 } ErrorState;

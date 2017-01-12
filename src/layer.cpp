@@ -16,8 +16,17 @@ Layer::Layer(int input_size, int output_size, std::default_random_engine& gen){
 	memory = new Vector(output_size);
 
 	state = NULL;
-	
 }
+
+Layer::~Layer(){
+	printf("Layer deconstructor broken");
+}
+void Layer::delete_state(){
+	printf("Delete state broken");
+}
+/*
+
+TODO: All this is broken
 
 Layer::~Layer(){
 	delete_state();
@@ -43,7 +52,7 @@ void Layer::delete_state(){
 	delete state.output_gate;
 	delete state.activate_prim;
 }
-
+*/
 void Layer::delete_weights(Weights w){
 	delete w.input;
 	delete w.output;
@@ -57,25 +66,36 @@ Vector Layer::forward_prop(Vector& input){
 	State* prev_state = state;
 	
     state = new State();
-	err_state = NULL;
 	
 	Vector bias(1);
 	bias.set_value(0,0,1);
+
 	
-	Matrix input_g_p = new Matrix(input_w.input->dot(input) + input_w.output->dot(*state->prev_state->output) + input_w.memory->dot(*memory) + input_w.bias->dot(bias));
+	Matrix input_g_p = input_w.input->dot(input) +
+		input_w.output->dot(*state->prev_state->output) +
+		input_w.memory->dot(*memory) +
+		input_w.bias->dot(bias);
 	Matrix input_g = input_g_p.sigmoid();
 
-	Matrix forget_g_p = forget_w.input->dot(input) + forget_w.output->dot(*state->prev_state->output) + forget_w.memory->dot(*memory) + forget_w.bias->dot(bias);
+	Matrix forget_g_p = forget_w.input->dot(input) +
+		forget_w.output->dot(*state->prev_state->output) +
+		forget_w.memory->dot(*memory) +
+		forget_w.bias->dot(bias);
 	Matrix forget_g = forget_g_p.sigmoid();
 
-	Matrix activation_g_p = activate_w.input->dot(input) + activate_w.output->dot(*state->prev_state->output) + activate_w.bias->dot(bias);
+	Matrix activation_g_p = activate_w.input->dot(input) +
+		activate_w.output->dot(*state->prev_state->output) +
+		activate_w.bias->dot(bias);
 	Matrix activation_g = activation_g_p.Mtanh();
 
 	memory = (Vector) (forget_g * *memory + input_g * activation_g);
 	Vector activated_mem = memory->Mtanh();
 
 	
-	Matrix output_g_p = output_w.input->dot(input) + output_w.output->dot(*state->prev_state->output) + output_w.memory->dot(*memory) + output_w.bias->dot(bias);
+	Matrix output_g_p = output_w.input->dot(input) +
+		output_w.output->dot(*state->prev_state->output) +
+		output_w.memory->dot(*memory) +
+		output_w.bias->dot(bias);
 	Matrix output_g = output_g_p.sigmoid();
 
 	Vector output = (Vector) (output_g * activated_mem);
@@ -88,13 +108,65 @@ Vector Layer::forward_prop(Vector& input){
 	state.forget_gateP = new Matrix(forget_g_p);
 	state.activation_gateP = new Matrix(activation_g_p);
 	state.output_gateP = new Matrix(output_gateP);
+	state.err_state = NULL;
 	
 	return output;
 }
 
 Vector Layer::back_prop(Vector& error){
-	// Changing how back prop works
-	return error;
+
+	if (state.err_state == NULL){
+		ErrorState* errS = new ErrorState();
+		errS->error_input = createErrorMatrix(this->output_size);
+		errS->error_forget = createErrorMatrix(this->output_size);
+		errS->error_activate = createErrorMatrix(this->output_size);
+	    errS->error_memory = new Vector(this->output_size);
+		errS->forget_gate = new Matrix(state->forget_gateP->sigmoid());
+		state->err_state = errS;
+	}
+	
+	Matrix* error_input =  state->err_state->error_input;
+	Matrix* error_forget =  state->err_state->error_forget;
+	Matrix* error_activate =  state->err_state->error_activate;
+	// Matrix* error_output =  state->err_state->error_output;
+
+	
+	Matrix d_y = error +
+		input_w->output->dot(*error_input->output) +
+	    forget_w->output->dot(*error_forget->output) +
+	    output_w->output->dot(*error_output->output) +
+	    activate_w->output->dot(*error_activate->output);
+
+	Matrix d_o = out_error * memory->Mtanh();
+	Vector d_mem =
+		d_y * memory->MtanhDeriv() *  state->output_gateP->sigmoid() +
+		state->err_state->forget_gate * error_memory
+		input_w->output->dot(*error_input->memory) +
+	    forget_w->output->dot(*error_forget->memory) +
+	    output_w->output->dot(d_o);
+
+	Matrix d_f =
+		d_mem * state->prev_state->memory * forget_gateP->sigDeriv();
+	Matrix d_i =
+		d_mem * activation_gateP->sigmoid() * input_gateP->sigDeriv();
+	Matrix d_a =
+		d_mem * input_gateP->sigmoid() * activation_gateP->sigDeriv();
+
+	if (state->prev_state == NULL){
+		return error;
+	}
+
+	ErrorState* err = new ErrorState();
+	
+	err->error_input = new Matrix(d_i);
+	err->error_forget = new Matrix(d_f);
+	err->error_activate = new Matrix(d_a);
+	err->error_memory = new Matrix(d_mem);
+	err->forget_gate = new Matrix(state->forget_gateP->sigmoid());
+
+	state->prev_state.err_state = err;
+	
+	return error; // TODO: put this to the sum of all input_i errors
 }
 
 void Layer::clear_error(){
