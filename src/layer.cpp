@@ -88,7 +88,7 @@ Vector Layer::forward_prop(Vector& input){
 		activate_w.bias->dot(bias);
 	Matrix activation_g = activation_g_p.Mtanh();
 
-	memory = (Vector) (forget_g * *memory + input_g * activation_g);
+	memory = new Vector(forget_g * *memory + input_g * activation_g);
 	Vector activated_mem = memory->Mtanh();
 
 	
@@ -101,21 +101,21 @@ Vector Layer::forward_prop(Vector& input){
 	Vector output = (Vector) (output_g * activated_mem);
 
 	
-	state.prev_state = prev_state;
-	state.memory = new Vector(memory);
-	state.output = new Vector(output);
-	state.input_gateP = new Matrix(input_g_p);
-	state.forget_gateP = new Matrix(forget_g_p);
-	state.activation_gateP = new Matrix(activation_g_p);
-	state.output_gateP = new Matrix(output_gateP);
-	state.err_state = NULL;
+	state->prev_state = prev_state;
+	state->memory = new Vector(*memory);
+	state->output = new Vector(output);
+	state->input_gateP = new Matrix(input_g_p);
+	state->forget_gateP = new Matrix(forget_g_p);
+	state->activation_gateP = new Matrix(activation_g_p);
+	state->output_gateP = new Matrix(output_g_p);
+	state->err_state = NULL;
 	
 	return output;
 }
 
 Vector Layer::back_prop(Vector& error){
 
-	if (state.err_state == NULL){
+	if (state->err_state == NULL){
 		ErrorState* errS = new ErrorState();
 		errS->error_input = createErrorMatrix(this->output_size);
 		errS->error_forget = createErrorMatrix(this->output_size);
@@ -125,46 +125,49 @@ Vector Layer::back_prop(Vector& error){
 		state->err_state = errS;
 	}
 	
-	Matrix* error_input =  state->err_state->error_input;
-	Matrix* error_forget =  state->err_state->error_forget;
-	Matrix* error_activate =  state->err_state->error_activate;
-	// Matrix* error_output =  state->err_state->error_output;
+	ErrorMatrix* error_input =  state->err_state->error_input;
+	ErrorMatrix* error_forget =  state->err_state->error_forget;
+	ErrorMatrix* error_activate =  state->err_state->error_activate;
+	ErrorMatrix* error_output =  state->err_state->error_output;
 
 	
 	Matrix d_y = error +
-		input_w->output->dot(*error_input->output) +
-	    forget_w->output->dot(*error_forget->output) +
-	    output_w->output->dot(*error_output->output) +
-	    activate_w->output->dot(*error_activate->output);
+		input_w.output->dot(*error_input->output) +
+	    forget_w.output->dot(*error_forget->output) +
+	    output_w.output->dot(*error_output->output) +
+	    activate_w.output->dot(*error_activate->output);
 
-	Matrix d_o = out_error * memory->Mtanh();
+	Matrix d_o = d_y * memory->Mtanh();
 	Vector d_mem =
 		d_y * memory->MtanhDeriv() *  state->output_gateP->sigmoid() +
-		state->err_state->forget_gate * error_memory
-		input_w->output->dot(*error_input->memory) +
-	    forget_w->output->dot(*error_forget->memory) +
-	    output_w->output->dot(d_o);
+		*state->err_state->forget_gate * *state->err_state->error_memory +
+		input_w.output->dot(*error_input->memory) +
+	    forget_w.output->dot(*error_forget->memory) +
+	    output_w.output->dot(d_o);
 
 	Matrix d_f =
-		d_mem * state->prev_state->memory * forget_gateP->sigDeriv();
+		d_mem * *state->prev_state->memory * state->forget_gateP->sigDeriv();
 	Matrix d_i =
-		d_mem * activation_gateP->sigmoid() * input_gateP->sigDeriv();
+		d_mem * state->activation_gateP->sigmoid() * state->input_gateP->sigDeriv();
 	Matrix d_a =
-		d_mem * input_gateP->sigmoid() * activation_gateP->sigDeriv();
+		d_mem * state->input_gateP->sigmoid() * state->activation_gateP->sigDeriv();
 
 	if (state->prev_state == NULL){
 		return error;
 	}
 
 	ErrorState* err = new ErrorState();
-	
+
+	/*
+	  fix this stuff
 	err->error_input = new Matrix(d_i);
 	err->error_forget = new Matrix(d_f);
 	err->error_activate = new Matrix(d_a);
 	err->error_memory = new Matrix(d_mem);
+	*/
 	err->forget_gate = new Matrix(state->forget_gateP->sigmoid());
 
-	state->prev_state.err_state = err;
+	state->prev_state->err_state = err;
 	
 	return error; // TODO: put this to the sum of all input_i errors
 }

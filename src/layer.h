@@ -28,7 +28,7 @@ typedef struct ErrorState {
 	ErrorMatrix* error_input;
 	ErrorMatrix* error_forget;
 	ErrorMatrix* error_activate;
-	// ErrorMatrix* error_output;
+	ErrorMatrix* error_output;
 	Matrix* error_memory;
 	Matrix* forget_gate;
 } ErrorState;
