@@ -10,8 +10,8 @@ BUILDDIR = build
 SOURCEDIR = src
 HEADERDIR = src
 
-SOURCES = $(wildcard $(SOURCEDIR)/*.c)
-OBJECTS = $(patsubst $(SOURCEDIR)/%.c, $(BUILDDIR)/%.o, $(SOURCES))
+SOURCES = $(wildcard $(SOURCEDIR)/*.cpp)
+OBJECTS = $(patsubst $(SOURCEDIR)/%.cpp, $(BUILDDIR)/%.o, $(SOURCES))
 
 .PHONY: all clean build clear $(BINARY)
 
