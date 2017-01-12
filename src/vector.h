@@ -8,6 +8,7 @@ class Vector: public Matrix{
  public:
 	Vector(int size): Matrix(size, 1){}
 	Vector(const Matrix& m): Matrix (m){}
+	Vector(const Vector& v): Matrix (v){}
 	Vector& operator=(const Matrix&);
 	Vector(const std::vector<double> init);
 	Vector concatenate(Vector& o);
