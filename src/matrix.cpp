@@ -142,6 +142,15 @@ Matrix Matrix::Mtanh(){
 	return out;
 }
 
+Matrix Matrix::MtanhDeriv(){
+	Matrix out(width, height);
+	for (int i = 0; i < get_size(); i++){
+		double val = get_direct_value(i);
+		val = tanh(val);
+		out.set_direct_value(i,1 - val * val);
+	}
+	return out;
+}
 
 Matrix Matrix::sigmoid(){
 	Matrix out(width, height);
@@ -154,6 +163,17 @@ Matrix Matrix::sigmoid(){
 	return out;
 }
 
+
+Matrix Matrix::sigDeriv(){
+	Matrix out(width, height);
+	for (int i = 0; i < get_size(); i++){
+		double val = get_direct_value(i);
+		// Fast sigmoid function, if having trouble chance to realistic
+		val = 1 / (1 + exp(-val));
+		out.set_direct_value(i,val * (1 - val));
+	}
+	return out;
+}
 
 void Matrix::fill_gaussian(std::default_random_engine& generator, double mean, double stddev){
 	std::normal_distribution<double> dist(mean, stddev);
