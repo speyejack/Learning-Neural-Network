@@ -156,43 +156,53 @@ Vector Layer::back_prop(ErrorOutput* errorOut){
 	Matrix d_a =
 		d_mem * state->input_gateP->sigmoid() *
 		state->activation_gateP->sigDeriv();
+	// Done with major back prop calculations
 
+
+	
+	// If at end of chain, just return
 	if (state->prev_state == NULL){
+		// This doesn't work...
 		return error;
 	}
-
+	// Build next error state
+	// Create each error matrix for error state and fill them
 	ErrorState* err = new ErrorState();
+	// TODO: Fill ErrorMatrix (this may require chaning the error matrix to hold error from each category
 	err_in = new ErrorMatrix()
 	err->error_input = err_in;
+	// TODO: Fill ErrorMatrix
 	err_for = new ErrorMatrix()
-	err->error_input = err_for;
+	err->error_forget = err_for;
+	// TODO: Fill ErrorMatrix
 	err_act = new ErrorMatrix()
-	err->error_input = err_act;
+	err->error_activate = err_act;
+	// TODO: Fill ErrorMatrix
 	err_out = new ErrorMatrix()
-	err->error_input = err_out;
+	err->error_output = err_out;
+	err->forget_gate = new Matrix(state->forget_gateP->sigmoid());
+    err->error_memory = new Matrix(d_mem);
+	state->prev_state->err_state = err;
 
-	ErrorOutput err_o = new ErrorOutput();
 	
+	// TODO: Finish build error output
+	ErrorOutput err_o = new ErrorOutput();
+
+	// TODO: Free up current state before losing it
+	// TODO: Call next backprop and save to last
+
+	// Gets the input error
     err_o->inputError =
 		new Matrix(input_w->input.transpose().dot(d_o) +
 				   forget_w->input.transpose().dot(d_o) +
 				   activate_w->input.transpose().dot(d_o) +
 				   output_w->input.transpose().dot(d_o));
 
+	// TODO: Get each weight error
 	err_o = new Weights();
 
-	
-    err_o->input = 
-	/*
-	  fix this stuff
-	err->error_input = new Matrix(d_i);
-	err->error_forget = new Matrix(d_f);
-	err->error_activate = new Matrix(d_a);
-	err->error_memory = new Matrix(d_mem);
-	*/
-	err->forget_gate = new Matrix(state->forget_gateP->sigmoid());
 
-	state->prev_state->err_state = err;
+
 	
 	return err_o;
 }

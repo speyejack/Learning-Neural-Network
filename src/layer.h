@@ -4,7 +4,8 @@
 #include "vector.h"
 #include <random>
 #include <ostream>
-
+// THOUGHT: Structs in structs?
+// Struct to hold each weight matrix
 typedef struct Weights{
 	Matrix* input;
 	Matrix* output;
@@ -12,13 +13,15 @@ typedef struct Weights{
 	Matrix* bias;
 } Weights;
 
-typedef struct ErrorOutput{
+// Struct to return from backprop
+typedef struct ErrorOutput{ 
 	ErrorOutput* last;
 	Matrix* inputError;
-	Matrix* error; // Is this the weight error?
 	Weights* weightErrors;
+	//Matrix* error; Is this the input error?
 }
 
+// Allows error to be held in errorState
 typedef struct ErrorMatrix{
 	Matrix* output;
 	Matrix* memory;
@@ -31,6 +34,7 @@ inline static ErrorMatrix* createErrorMatrix(int size){
 	return err;
 }
 
+// Holds Error from next timestep (prev in backprop)
 typedef struct ErrorState {
 	// From the next time step
 	ErrorMatrix* error_input;
@@ -41,6 +45,7 @@ typedef struct ErrorState {
 	Matrix* forget_gate;
 } ErrorState;
 
+// State of the cell
 typedef struct State {
 	State* prev_state;
 	ErrorState* err_state;
