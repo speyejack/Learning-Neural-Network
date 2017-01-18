@@ -19,6 +19,8 @@ Layer::Layer(int input_size, int output_size, std::default_random_engine& gen){
 }
 
 Layer::~Layer(){
+	// I know, really bad memory leaks.
+	// Just have to get the prop going first, then Ill go back.
 	printf("Layer deconstructor broken");
 }
 void Layer::delete_state(){
@@ -113,7 +115,7 @@ Vector Layer::forward_prop(Vector& input){
 	return output;
 }
 
-Vector Layer::back_prop(Vector& error){
+Vector Layer::back_prop(ErrorOutput* errorOut){
 
 	if (state->err_state == NULL){
 		ErrorState* errS = new ErrorState();
@@ -131,7 +133,7 @@ Vector Layer::back_prop(Vector& error){
 	ErrorMatrix* error_output =  state->err_state->error_output;
 
 	
-	Matrix d_y = error +
+	Matrix d_y = *errorOut->error +
 		input_w.output->dot(*error_input->output) +
 	    forget_w.output->dot(*error_forget->output) +
 	    output_w.output->dot(*error_output->output) +
@@ -146,18 +148,41 @@ Vector Layer::back_prop(Vector& error){
 	    output_w.output->dot(d_o);
 
 	Matrix d_f =
-		d_mem * *state->prev_state->memory * state->forget_gateP->sigDeriv();
+		d_mem * *state->prev_state->memory *
+		state->forget_gateP->sigDeriv();
 	Matrix d_i =
-		d_mem * state->activation_gateP->sigmoid() * state->input_gateP->sigDeriv();
+		d_mem * state->activation_gateP->sigmoid() *
+		state->input_gateP->sigDeriv();
 	Matrix d_a =
-		d_mem * state->input_gateP->sigmoid() * state->activation_gateP->sigDeriv();
+		d_mem * state->input_gateP->sigmoid() *
+		state->activation_gateP->sigDeriv();
 
 	if (state->prev_state == NULL){
 		return error;
 	}
 
 	ErrorState* err = new ErrorState();
+	err_in = new ErrorMatrix()
+	err->error_input = err_in;
+	err_for = new ErrorMatrix()
+	err->error_input = err_for;
+	err_act = new ErrorMatrix()
+	err->error_input = err_act;
+	err_out = new ErrorMatrix()
+	err->error_input = err_out;
 
+	ErrorOutput err_o = new ErrorOutput();
+	
+    err_o->inputError =
+		new Matrix(input_w->input.transpose().dot(d_o) +
+				   forget_w->input.transpose().dot(d_o) +
+				   activate_w->input.transpose().dot(d_o) +
+				   output_w->input.transpose().dot(d_o));
+
+	err_o = new Weights();
+
+	
+    err_o->input = 
 	/*
 	  fix this stuff
 	err->error_input = new Matrix(d_i);
@@ -169,7 +194,7 @@ Vector Layer::back_prop(Vector& error){
 
 	state->prev_state->err_state = err;
 	
-	return error; // TODO: put this to the sum of all input_i errors
+	return err_o;
 }
 
 void Layer::clear_error(){
@@ -209,7 +234,7 @@ Weights Layer::create_weights(int output_size, int input_size, std::default_rand
 	Weights w = {0, 0, 0, 0};
 	w.input = new Matrix(output_size, input_size);
 	w.output = new Matrix(output_size, output_size);
-	w.memory = new Matrix(output_size, output_size);
+ 	w.memory = new Matrix(output_size, output_size);
 	w.bias = new Matrix(output_size, 1);
 	
 	w.input->fill_gaussian(gen, mean, stddev);

@@ -12,6 +12,13 @@ typedef struct Weights{
 	Matrix* bias;
 } Weights;
 
+typedef struct ErrorOutput{
+	ErrorOutput* last;
+	Matrix* inputError;
+	Matrix* error; // Is this the weight error?
+	Weights* weightErrors;
+}
+
 typedef struct ErrorMatrix{
 	Matrix* output;
 	Matrix* memory;
@@ -25,6 +32,7 @@ inline static ErrorMatrix* createErrorMatrix(int size){
 }
 
 typedef struct ErrorState {
+	// From the next time step
 	ErrorMatrix* error_input;
 	ErrorMatrix* error_forget;
 	ErrorMatrix* error_activate;
