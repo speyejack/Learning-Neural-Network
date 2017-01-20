@@ -13,13 +13,16 @@ typedef struct Weights{
 	Matrix* bias;
 } Weights;
 
+
 // Struct to return from backprop
 typedef struct ErrorOutput{ 
 	ErrorOutput* last;
 	Matrix* inputError;
-	Weights* weightErrors;
-	//Matrix* error; Is this the input error?
-}
+    Weights* input_werr;
+	Weights* forget_werr;
+    Weights* activate_werr;
+	Weights* output_werr;
+} ErrorOutput;
 
 // Allows error to be held in errorState
 typedef struct ErrorMatrix{
@@ -27,12 +30,6 @@ typedef struct ErrorMatrix{
 	Matrix* memory;
 } ErrorMatrix;
 
-inline static ErrorMatrix* createErrorMatrix(int size){
-	ErrorMatrix* err = new ErrorMatrix();
-	err->output = new Vector(size);
-	err->memory = new Vector(size);
-	return err;
-}
 
 // Holds Error from next timestep (prev in backprop)
 typedef struct ErrorState {
@@ -49,6 +46,7 @@ typedef struct ErrorState {
 typedef struct State {
 	State* prev_state;
 	ErrorState* err_state;
+	Vector* input;
 	Vector* memory;
 	Vector* output;
 	Matrix* input_gateP;
@@ -57,8 +55,9 @@ typedef struct State {
 	Matrix* output_gateP;
 } State;
 
+
 class Layer {
-private:
+ private:
 	int input_size;
 	int output_size;
 	Weights forget_w;
@@ -71,8 +70,9 @@ private:
 	void delete_state();
 	void delete_weights(Weights w);
 	Weights create_weights(int, int, std::default_random_engine&, double, double);
+	ErrorOutput* apply_back_prop(ErrorOutput* error);
 	
-public:
+ public:
 	
 	Layer(int input_size, int output_size, std::default_random_engine& gen);
 	~Layer();
@@ -81,7 +81,7 @@ public:
 
 	
 	Vector forward_prop(Vector& input);
-	Vector back_prop(Vector& error);
+	ErrorOutput* back_prop(ErrorOutput* error);
 	void apply_error(double learning_rate);
 	void reset();
 	void write_to_json(std::ostream&);

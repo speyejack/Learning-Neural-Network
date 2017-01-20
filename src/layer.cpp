@@ -28,38 +28,126 @@ void Layer::delete_state(){
 }
 /*
 
-TODO: All this is broken
+  TODO: All this is broken
 
-Layer::~Layer(){
-	delete_state();
-	delete_weights(forget_w);
-	delete_weights(activate_w);
-	delete_weights(input_w);
-	delete_weights(output_w);
-	delete memory;
-	delete error.err_input_w;
-	delete error.err_activate_w;
-	delete error.err_forget_w;
-	delete error.err_output_w;
-}
+  Layer::~Layer(){
+  delete_state();
+  delete_weights(forget_w);
+  delete_weights(activate_w);
+  delete_weights(input_w);
+  delete_weights(output_w);
+  delete memory;
+  delete error.err_input_w;
+  delete error.err_activate_w;
+  delete error.err_forget_w;
+  delete error.err_output_w;
+  }
 
-void Layer::delete_state(){
-	// May be changing structure of state
-	delete state.prev_input;
-	delete state.prev_output;
-	delete state.prev_mem;
-	delete state.input_gate;
-	delete state.activate_gate;
-	delete state.forget_gate;
-	delete state.output_gate;
-	delete state.activate_prim;
-}
+  void Layer::delete_state(){
+  // May be changing structure of state
+  delete state.prev_input;
+  delete state.prev_output;
+  delete state.prev_mem;
+  delete state.input_gate;
+  delete state.activate_gate;
+  delete state.forget_gate;
+  delete state.output_gate;
+  delete state.activate_prim;
+  }
 */
+
+
+static inline Weights* createWeightErrors(State* state, Matrix* error, Weights* prev_error){
+	Vector bias(1);
+	bias.set_value(0,0,1);
+	
+	Weights* weights = new Weights();
+	weights->input =
+		new Matrix(*error * state->input->transpose() +
+				   *prev_error->input);
+	weights->output =
+		new Matrix(*error * state->prev_state->output->transpose() +
+				   *prev_error->output);
+	weights->memory =
+		new Matrix(*error * state->memory->transpose() +
+				   *prev_error->memory);
+	weights->bias =
+		new Matrix(*error * bias.transpose() +
+				   *prev_error->bias);
+	return weights;
+}
+
+inline static ErrorMatrix* createErrorMatrix(int size){
+	ErrorMatrix* err = new ErrorMatrix();
+	err->output = new Vector(size);
+	err->memory = new Vector(size);
+	return err;
+}
+
 void Layer::delete_weights(Weights w){
 	delete w.input;
 	delete w.output;
 	delete w.memory;
 	delete w.bias;
+}
+
+void deleteWeights(Weights* weights){
+	if (weights == NULL)
+		return;
+	delete weights->input;
+	delete weights->output;
+	delete weights->memory;
+	delete weights->bias;
+	delete weights;
+}
+
+void deleteErrorMatrix(ErrorMatrix* errorMat){
+	if (errorMat == NULL)
+		return;
+	delete errorMat->output;
+	delete errorMat->memory;
+}
+
+void deleteErrorState(ErrorState* eState){
+	if (eState == NULL)
+		return;
+	deleteErrorMatrix(eState->error_input);
+	deleteErrorMatrix(eState->error_forget);
+	deleteErrorMatrix(eState->error_activate);
+	deleteErrorMatrix(eState->error_output);
+	delete eState->error_memory;
+	delete eState->forget_gate;
+}
+
+void deleteErrorOutput(ErrorOutput*);
+void deleteErrorOutput(ErrorOutput* errorOut){
+	if (errorOut == NULL)
+		return;
+	delete errorOut->inputError;
+	deleteWeights(errorOut->input_werr);
+	deleteWeights(errorOut->forget_werr);
+	deleteWeights(errorOut->activate_werr);
+	deleteWeights(errorOut->output_werr);
+	ErrorOutput* next = errorOut->last;
+	delete errorOut;
+	deleteErrorOutput(next);
+}
+
+void deleteState(State*);
+void deleteState(State* state){
+	if (state == NULL)
+		return;
+	deleteErrorState(state->err_state);
+	delete state->input;
+	delete state->memory;
+	delete state->output;
+	delete state->input_gateP;
+	delete state->forget_gateP;
+	delete state->activation_gateP;
+	delete state->output_gateP;
+	State* next = state->prev_state;
+	delete state;
+	deleteState(next);
 }
 
 Vector Layer::forward_prop(Vector& input){
@@ -104,6 +192,7 @@ Vector Layer::forward_prop(Vector& input){
 
 	
 	state->prev_state = prev_state;
+	state->input = new Vector(input);
 	state->memory = new Vector(*memory);
 	state->output = new Vector(output);
 	state->input_gateP = new Matrix(input_g_p);
@@ -115,8 +204,16 @@ Vector Layer::forward_prop(Vector& input){
 	return output;
 }
 
-Vector Layer::back_prop(ErrorOutput* errorOut){
+ErrorOutput* Layer::back_prop(ErrorOutput* errorOut){
+	State* top = state;
+	
+	ErrorOutput* out = apply_back_prop(errorOut);
+	deleteState(top);
+	deleteErrorOutput(errorOut);
+	return out;
+}
 
+ErrorOutput* Layer::apply_back_prop(ErrorOutput* errorOut){
 	if (state->err_state == NULL){
 		ErrorState* errS = new ErrorState();
 		errS->error_input = createErrorMatrix(this->output_size);
@@ -133,7 +230,7 @@ Vector Layer::back_prop(ErrorOutput* errorOut){
 	ErrorMatrix* error_output =  state->err_state->error_output;
 
 	
-	Matrix d_y = *errorOut->error +
+	Matrix d_y = *errorOut->inputError +
 		input_w.output->dot(*error_input->output) +
 	    forget_w.output->dot(*error_forget->output) +
 	    output_w.output->dot(*error_output->output) +
@@ -158,51 +255,66 @@ Vector Layer::back_prop(ErrorOutput* errorOut){
 		state->activation_gateP->sigDeriv();
 	// Done with major back prop calculations
 
-
 	
 	// If at end of chain, just return
 	if (state->prev_state == NULL){
-		// This doesn't work...
-		return error;
+		// Try to fix base case
+		exit(1);
 	}
 	// Build next error state
 	// Create each error matrix for error state and fill them
 	ErrorState* err = new ErrorState();
-	// TODO: Fill ErrorMatrix (this may require chaning the error matrix to hold error from each category
-	err_in = new ErrorMatrix()
+	ErrorMatrix* err_in = new ErrorMatrix();
+	
 	err->error_input = err_in;
-	// TODO: Fill ErrorMatrix
-	err_for = new ErrorMatrix()
+	err_in->memory = new Matrix(input_w.memory->transpose().dot(d_i));
+	err_in->output = new Matrix(input_w.output->transpose().dot(d_i));
+	
+	ErrorMatrix* err_for = new ErrorMatrix();
 	err->error_forget = err_for;
-	// TODO: Fill ErrorMatrix
-	err_act = new ErrorMatrix()
+	err_for->memory = new Matrix(forget_w.memory->transpose().dot(d_f));
+	err_for->output = new Matrix(forget_w.output->transpose().dot(d_f));
+	
+	ErrorMatrix* err_act = new ErrorMatrix();
 	err->error_activate = err_act;
-	// TODO: Fill ErrorMatrix
-	err_out = new ErrorMatrix()
+	err_act->memory = new Matrix(activate_w.memory->transpose().dot(d_a));
+	err_act->output = new Matrix(activate_w.output->transpose().dot(d_a));
+
+	ErrorMatrix* err_out = new ErrorMatrix();
 	err->error_output = err_out;
+	err_out->memory = new Matrix(input_w.memory->transpose().dot(d_o));
+	err_out->output = new Matrix(input_w.output->transpose().dot(d_o));
+
 	err->forget_gate = new Matrix(state->forget_gateP->sigmoid());
     err->error_memory = new Matrix(d_mem);
 	state->prev_state->err_state = err;
 
 	
 	// TODO: Finish build error output
-	ErrorOutput err_o = new ErrorOutput();
+	ErrorOutput* err_o = new ErrorOutput();
 
 	// TODO: Free up current state before losing it
 	// TODO: Call next backprop and save to last
 
+	
+	
 	// Gets the input error
     err_o->inputError =
-		new Matrix(input_w->input.transpose().dot(d_o) +
-				   forget_w->input.transpose().dot(d_o) +
-				   activate_w->input.transpose().dot(d_o) +
-				   output_w->input.transpose().dot(d_o));
+		new Matrix(input_w.input->transpose().dot(d_i) +
+				   forget_w.input->transpose().dot(d_f) +
+				   activate_w.input->transpose().dot(d_a) +
+				   output_w.input->transpose().dot(d_o));
 
 	// TODO: Get each weight error
-	err_o = new Weights();
-
-
-
+	err_o->input_werr = createWeightErrors(state, &d_i,
+										   err_o->last->input_werr);
+	err_o->forget_werr = createWeightErrors(state, &d_f,
+											err_o->last->forget_werr);
+	err_o->activate_werr = createWeightErrors(state, &d_a,
+											  err_o->last->activate_werr);
+	err_o->output_werr = createWeightErrors(state, &d_o,
+											err_o->last->output_werr);
+	
 	
 	return err_o;
 }
@@ -230,10 +342,10 @@ void Layer::write_to_json(std::ostream& os){
 	exit(1);
 	
 	/* Commented out to suppress compiler errors
-	os << "\"input_w\" : " << *input_w << ',' << std::endl;
-	os << "\"activate_w\" : " << *activate_w << ',' << std::endl;
-	os << "\"forget_w\" : " << *forget_w << ',' << std::endl;
-	os << "\"output_w\" : " << *output_w << ',' << std::endl;
+	   os << "\"input_w\" : " << *input_w << ',' << std::endl;
+	   os << "\"activate_w\" : " << *activate_w << ',' << std::endl;
+	   os << "\"forget_w\" : " << *forget_w << ',' << std::endl;
+	   os << "\"output_w\" : " << *output_w << ',' << std::endl;
 	*/
 	
 	os << "}" << std::endl;
