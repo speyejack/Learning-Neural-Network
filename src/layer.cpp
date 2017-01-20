@@ -290,13 +290,12 @@ ErrorOutput* Layer::apply_back_prop(ErrorOutput* errorOut){
 	state->prev_state->err_state = err;
 
 	
-	// TODO: Finish build error output
 	ErrorOutput* err_o = new ErrorOutput();
 
 	// TODO: Free up current state before losing it
 	// TODO: Call next backprop and save to last
-
-	
+	state = state->prev_state;
+	err_o->last = apply_back_prop(errorOut->last);
 	
 	// Gets the input error
     err_o->inputError =
