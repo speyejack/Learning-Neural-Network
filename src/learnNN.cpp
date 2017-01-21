@@ -19,7 +19,7 @@ int main(){
 		t.train();
 		std::string str = t.sample_string('\n', 100);
 		std::cout << str << std::endl;
-		if (!(i % 100)){
+		if (!(i % 100 || true)){
 			printf("Saving network...");
 			std::ofstream fh;
 			fh.open("outputs/saves/log.json");

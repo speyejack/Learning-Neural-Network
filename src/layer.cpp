@@ -152,8 +152,8 @@ Layer::Layer(int input_size, int output_size, std::default_random_engine& gen){
 	forget_w = create_weights(output_size, input_size, gen, 0, 0.1);
 	output_w = create_weights(output_size, input_size, gen, 0, 0.1);
 	memory = new Vector(output_size);
-
 	state = NULL;
+	reset();
 }
 
 Layer::~Layer(){
@@ -168,6 +168,7 @@ Vector Layer::forward_prop(Vector& input){
 	State* prev_state = state;
 	
     state = new State();
+	state->prev_state = prev_state;
 	
 	Vector bias(1);
 	bias.set_value(0,0,1);
@@ -189,8 +190,8 @@ Vector Layer::forward_prop(Vector& input){
 		activate_w.output->dot(*state->prev_state->output) +
 		activate_w.bias->dot(bias);
 	Matrix activation_g = activation_g_p.Mtanh();
-
-	memory = new Vector(forget_g * *memory + input_g * activation_g);
+	Matrix temp = forget_g * *memory + input_g * activation_g;
+	memory = new Vector(temp);
 	Vector activated_mem = memory->Mtanh();
 
 	
@@ -222,6 +223,7 @@ ErrorOutput* Layer::back_prop(ErrorOutput* errorOut){
 	ErrorOutput* out = apply_back_prop(errorOut);
 	deleteState(top);
 	deleteErrorOutput(errorOut);
+	reset();
 	return out;
 }
 
@@ -346,7 +348,13 @@ void Layer::apply_error(double learning_rate){
 }
 
 void Layer::reset(){
+	if (state == NULL){
+		state = new State();
+		state->output = new Vector(output_size);
+	}
+	
 	memory->clear_matrix();
+	
 }
 
 void Layer::write_to_json(std::ostream& os){
