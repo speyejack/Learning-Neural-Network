@@ -83,7 +83,7 @@ void Matrix::operator+=(const Matrix &o){
 
 Matrix Matrix::operator-(const Matrix &o){
 	assert(this->get_size() == (int) o.matrix.size());
-	Matrix out(width, height);
+	Matrix out(height, width);
 	for (int i = 0; i < get_size(); i++)
 		out.matrix[i] = matrix[i] - o.matrix[i];
 	return out;
@@ -133,7 +133,7 @@ Matrix Matrix::transpose(){
 
 
 Matrix Matrix::Mtanh(){
-	Matrix out(width, height);
+	Matrix out(height, width);
 	for (int i = 0; i < get_size(); i++){
 		double val = get_direct_value(i);
 		val = tanh(val);
@@ -143,7 +143,7 @@ Matrix Matrix::Mtanh(){
 }
 
 Matrix Matrix::MtanhDeriv(){
-	Matrix out(width, height);
+	Matrix out(height, width);
 	for (int i = 0; i < get_size(); i++){
 		double val = get_direct_value(i);
 		val = tanh(val);
@@ -153,7 +153,7 @@ Matrix Matrix::MtanhDeriv(){
 }
 
 Matrix Matrix::sigmoid(){
-	Matrix out(width, height);
+	Matrix out(height, width);
 	for (int i = 0; i < get_size(); i++){
 		double val = get_direct_value(i);
 		// Fast sigmoid function, if having trouble chance to realistic
@@ -165,7 +165,7 @@ Matrix Matrix::sigmoid(){
 
 
 Matrix Matrix::sigDeriv(){
-	Matrix out(width, height);
+	Matrix out(height, width);
 	for (int i = 0; i < get_size(); i++){
 		double val = get_direct_value(i);
 		// Fast sigmoid function, if having trouble chance to realistic
