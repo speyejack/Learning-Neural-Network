@@ -69,7 +69,6 @@ class Layer {
 	void clear_error();
 	void delete_state();
 	void delete_weights(Weights w);
-	Weights create_weights(int, int, std::default_random_engine&, double, double);
 	ErrorOutput* apply_back_prop(ErrorOutput* error);
 	
  public:

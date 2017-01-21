@@ -4,28 +4,6 @@
 #include <assert.h>
 #include <ostream>
 
-
-Layer::Layer(int input_size, int output_size, std::default_random_engine& gen){
-	this->input_size = input_size;
-	this->output_size = output_size;
-	
-	input_w = create_weights(output_size, input_size, gen, 0, 0.1);
-	activate_w = create_weights(output_size, input_size, gen, 0, 0.1);
-	forget_w = create_weights(output_size, input_size, gen, 0, 0.1);
-	output_w = create_weights(output_size, input_size, gen, 0, 0.1);
-	memory = new Vector(output_size);
-
-	state = NULL;
-}
-
-Layer::~Layer(){
-	// I know, really bad memory leaks.
-	// Just have to get the prop going first, then Ill go back.
-	printf("Layer deconstructor broken");
-}
-void Layer::delete_state(){
-	printf("Delete state broken");
-}
 /*
 
   TODO: All this is broken
@@ -42,22 +20,37 @@ void Layer::delete_state(){
   delete error.err_forget_w;
   delete error.err_output_w;
   }
-
-  void Layer::delete_state(){
-  // May be changing structure of state
-  delete state.prev_input;
-  delete state.prev_output;
-  delete state.prev_mem;
-  delete state.input_gate;
-  delete state.activate_gate;
-  delete state.forget_gate;
-  delete state.output_gate;
-  delete state.activate_prim;
-  }
 */
 
 
-static inline Weights* createWeightErrors(State* state, Matrix* error, Weights* prev_error){
+
+Weights create_weights(int output_size, int input_size,
+					   std::default_random_engine& gen,
+					   double mean, double stddev){
+	Weights w = {0, 0, 0, 0};
+	w.input = new Matrix(output_size, input_size);
+	w.output = new Matrix(output_size, output_size);
+ 	w.memory = new Matrix(output_size, output_size);
+	w.bias = new Matrix(output_size, 1);
+	
+	w.input->fill_gaussian(gen, mean, stddev);
+	w.output->fill_gaussian(gen, mean, stddev);
+	w.memory->fill_gaussian(gen, mean, stddev);
+	w.bias->fill_gaussian(gen, mean, stddev);
+	return w;
+}
+
+Weights* create_empty_weights(int output_size, int input_size){
+	Weights* w = new Weights();
+	w->input = new Matrix(output_size, input_size);
+	w->output = new Matrix(output_size, output_size);
+ 	w->memory = new Matrix(output_size, output_size);
+	w->bias = new Matrix(output_size, 1);
+	
+	return w;
+}
+
+Weights* createWeightErrors(State* state, Matrix* error, Weights* prev_error){
 	Vector bias(1);
 	bias.set_value(0,0,1);
 	
@@ -77,7 +70,7 @@ static inline Weights* createWeightErrors(State* state, Matrix* error, Weights* 
 	return weights;
 }
 
-inline static ErrorMatrix* createErrorMatrix(int size){
+ErrorMatrix* createErrorMatrix(int size){
 	ErrorMatrix* err = new ErrorMatrix();
 	err->output = new Vector(size);
 	err->memory = new Vector(size);
@@ -150,6 +143,25 @@ void deleteState(State* state){
 	deleteState(next);
 }
 
+Layer::Layer(int input_size, int output_size, std::default_random_engine& gen){
+	this->input_size = input_size;
+	this->output_size = output_size;
+	
+	input_w = create_weights(output_size, input_size, gen, 0, 0.1);
+	activate_w = create_weights(output_size, input_size, gen, 0, 0.1);
+	forget_w = create_weights(output_size, input_size, gen, 0, 0.1);
+	output_w = create_weights(output_size, input_size, gen, 0, 0.1);
+	memory = new Vector(output_size);
+
+	state = NULL;
+}
+
+Layer::~Layer(){
+	// I know, really bad memory leaks.
+	// Just have to get the prop going first, then Ill go back.
+	printf("Layer deconstructor broken");
+}
+
 Vector Layer::forward_prop(Vector& input){
 	assert(input.get_height() == input_size);
 
@@ -214,6 +226,9 @@ ErrorOutput* Layer::back_prop(ErrorOutput* errorOut){
 }
 
 ErrorOutput* Layer::apply_back_prop(ErrorOutput* errorOut){
+	if (errorOut == NULL){
+	}
+	
 	if (state->err_state == NULL){
 		ErrorState* errS = new ErrorState();
 		errS->error_input = createErrorMatrix(this->output_size);
@@ -256,13 +271,7 @@ ErrorOutput* Layer::apply_back_prop(ErrorOutput* errorOut){
 	// Done with major back prop calculations
 
 	
-	// If at end of chain, just return
-	if (state->prev_state == NULL){
-		// Try to fix base case
-		exit(1);
-	}
-	// Build next error state
-	// Create each error matrix for error state and fill them
+	
 	ErrorState* err = new ErrorState();
 	ErrorMatrix* err_in = new ErrorMatrix();
 	
@@ -291,20 +300,30 @@ ErrorOutput* Layer::apply_back_prop(ErrorOutput* errorOut){
 
 	
 	ErrorOutput* err_o = new ErrorOutput();
-
-	// TODO: Free up current state before losing it
-	// TODO: Call next backprop and save to last
-	state = state->prev_state;
-	err_o->last = apply_back_prop(errorOut->last);
+	if (state->prev_state == NULL){
+		state->prev_state = new State();
+		state->prev_state->output = new Vector(input_size);
+		ErrorOutput* lErr = new ErrorOutput();
+		lErr->input_werr = create_empty_weights(output_size, input_size);
+		lErr->forget_werr = create_empty_weights(output_size, output_size);
+		lErr->activate_werr = create_empty_weights(output_size, output_size);
+		lErr->output_werr = create_empty_weights(output_size, 1);
+		err_o->last = lErr;
+	} else {
+		State* cur_state = state;
+		state = state->prev_state;
+		// If at end of chain, just return
+		// Recursive call
+		err_o->last = apply_back_prop(errorOut->last);
+		state = cur_state;
+	}
 	
-	// Gets the input error
     err_o->inputError =
 		new Matrix(input_w.input->transpose().dot(d_i) +
 				   forget_w.input->transpose().dot(d_f) +
 				   activate_w.input->transpose().dot(d_a) +
 				   output_w.input->transpose().dot(d_o));
 
-	// TODO: Get each weight error
 	err_o->input_werr = createWeightErrors(state, &d_i,
 										   err_o->last->input_werr);
 	err_o->forget_werr = createWeightErrors(state, &d_f,
@@ -350,21 +369,6 @@ void Layer::write_to_json(std::ostream& os){
 	os << "}" << std::endl;
 	os << "}";
 }
-
-Weights Layer::create_weights(int output_size, int input_size, std::default_random_engine& gen, double mean, double stddev){
-	Weights w = {0, 0, 0, 0};
-	w.input = new Matrix(output_size, input_size);
-	w.output = new Matrix(output_size, output_size);
- 	w.memory = new Matrix(output_size, output_size);
-	w.bias = new Matrix(output_size, 1);
-	
-	w.input->fill_gaussian(gen, mean, stddev);
-	w.output->fill_gaussian(gen, mean, stddev);
-	w.memory->fill_gaussian(gen, mean, stddev);
-	w.bias->fill_gaussian(gen, mean, stddev);
-	return w;
-}
-
 std::ostream& operator<<(std::ostream& os, Layer& layer){
 	layer.write_to_json(os);
 	return os;

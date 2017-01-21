@@ -35,19 +35,18 @@ std::vector<double> Network::forward_prop(std::vector<double>& input){
 
 
 void Network::back_prop(std::vector<double>& error){
-	Vector error_vec(error);
-	for(int i = layers.size() - 1; i >= 0; i--){
-		exit(1);
-		//error_vec = layers[i]->back_prop(error_vec);
-	}
+	ErrorOutput* errO = new ErrorOutput();
+	errO->inputError = new Vector(error);
+	errO->last = errOut;
+	errOut = errO;
 }
 
 void Network::apply_error(double learning_rate){
-	for(unsigned int i = 0; i < layers.size(); i++){
-		layers[i]->apply_error(learning_rate);
+	for(int i = layers.size() - 1; i >= 0; i--){
+		errOut = layers[i]->back_prop(errOut);
 		layers[i]->reset();
 	}
-
+	errOut = NULL;
 }
 
 void Network::write_to_json(std::ostream& os){
