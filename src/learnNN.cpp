@@ -14,7 +14,7 @@ int main(){
 	std::cout << "Seed: " << seed << std::endl;
 	Network net(layers, {seed});
 	
-	TextTrainer t(&net, 100, 0.2, "inputs/hello.txt");
+	TextTrainer t(&net, 1, 0.2, "inputs/hello.txt");
 	for( int i = 0; i < 100000; i ++){
 		t.train();
 		std::string str = t.sample_string('\n', 100);

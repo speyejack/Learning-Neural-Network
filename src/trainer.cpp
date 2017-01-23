@@ -15,11 +15,9 @@ std::vector<double> Trainer::train(std::vector<double>& input, std::vector<doubl
     std::vector<double> output = net->forward_prop(input);
     std::vector<double> error = get_error(output, correct_output);
     net->back_prop(error);
-    if (iteration >= batch_size){
+    if (++iteration >= batch_size - 1){
         net->apply_error(learning_rate);
 		iteration = 0;
-	} else {
-		iteration++;
 	}
 	return output;
 }

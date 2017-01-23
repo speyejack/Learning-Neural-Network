@@ -16,6 +16,7 @@ typedef struct Weights{
 
 // Struct to return from backprop
 typedef struct ErrorOutput{ 
+	ErrorOutput(): last(0), inputError(0), input_werr(0), forget_werr(0), activate_werr(0), output_werr(0){};
 	ErrorOutput* last;
 	Matrix* inputError;
     Weights* input_werr;

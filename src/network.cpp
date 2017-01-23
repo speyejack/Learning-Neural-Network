@@ -16,6 +16,7 @@ Network::Network(std::vector<int> layer_sizes, std::seed_seq seed){
 		l = new Layer(layer_sizes[i - 1], layer_sizes[i], gen);
 		layers[i-1] = l;
 	}
+	errOut = NULL; 
 }
 
 Network::~Network(){

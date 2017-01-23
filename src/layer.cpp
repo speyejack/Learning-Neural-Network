@@ -56,16 +56,16 @@ Weights* createWeightErrors(State* state, Matrix* error, Weights* prev_error){
 	
 	Weights* weights = new Weights();
 	weights->input =
-		new Matrix(*error * state->input->transpose() +
+		new Matrix(error->dot(state->input->transpose()) +
 				   *prev_error->input);
 	weights->output =
-		new Matrix(*error * state->prev_state->output->transpose() +
+		new Matrix(error->dot(state->prev_state->output->transpose()) +
 				   *prev_error->output);
 	weights->memory =
-		new Matrix(*error * state->memory->transpose() +
+		new Matrix(error->dot(state->memory->transpose()) +
 				   *prev_error->memory);
 	weights->bias =
-		new Matrix(*error * bias.transpose() +
+		new Matrix(error->dot(bias.transpose()) +
 				   *prev_error->bias);
 	return weights;
 }
@@ -99,6 +99,7 @@ void deleteErrorMatrix(ErrorMatrix* errorMat){
 		return;
 	delete errorMat->output;
 	delete errorMat->memory;
+	delete errorMat;
 }
 
 void deleteErrorState(ErrorState* eState){
@@ -110,6 +111,7 @@ void deleteErrorState(ErrorState* eState){
 	deleteErrorMatrix(eState->error_output);
 	delete eState->error_memory;
 	delete eState->forget_gate;
+	delete eState;
 }
 
 void deleteErrorOutput(ErrorOutput*);
@@ -223,19 +225,21 @@ ErrorOutput* Layer::back_prop(ErrorOutput* errorOut){
 	ErrorOutput* out = apply_back_prop(errorOut);
 	deleteState(top);
 	deleteErrorOutput(errorOut);
+	top = NULL;
+	errorOut = NULL;
+	
 	reset();
 	return out;
 }
 
 ErrorOutput* Layer::apply_back_prop(ErrorOutput* errorOut){
-	if (errorOut == NULL){
-	}
 	
 	if (state->err_state == NULL){
 		ErrorState* errS = new ErrorState();
 		errS->error_input = createErrorMatrix(this->output_size);
 		errS->error_forget = createErrorMatrix(this->output_size);
 		errS->error_activate = createErrorMatrix(this->output_size);
+		errS->error_output = createErrorMatrix(this->output_size);
 	    errS->error_memory = new Vector(this->output_size);
 		errS->forget_gate = new Matrix(state->forget_gateP->sigmoid());
 		state->err_state = errS;
@@ -302,14 +306,15 @@ ErrorOutput* Layer::apply_back_prop(ErrorOutput* errorOut){
 
 	
 	ErrorOutput* err_o = new ErrorOutput();
-	if (state->prev_state == NULL){
+	
+	if (state->prev_state->prev_state == NULL){
 		state->prev_state = new State();
 		state->prev_state->output = new Vector(input_size);
 		ErrorOutput* lErr = new ErrorOutput();
 		lErr->input_werr = create_empty_weights(output_size, input_size);
 		lErr->forget_werr = create_empty_weights(output_size, output_size);
 		lErr->activate_werr = create_empty_weights(output_size, output_size);
-		lErr->output_werr = create_empty_weights(output_size, 1);
+		lErr->output_werr = create_empty_weights(output_size, output_size);
 		err_o->last = lErr;
 	} else {
 		State* cur_state = state;
@@ -351,6 +356,7 @@ void Layer::reset(){
 	if (state == NULL){
 		state = new State();
 		state->output = new Vector(output_size);
+		state->memory = new Vector(output_size);
 	}
 	
 	memory->clear_matrix();
