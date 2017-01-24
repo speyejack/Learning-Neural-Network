@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "matrix.h"
 #include <vector>
-#include "textTrainer.h"
+#include "gateTrainer.h"
 #include "network.h"
 #include <iostream>
 #include <fstream>
@@ -22,7 +22,7 @@ int main(){
 		t.train();
 		printf("Sampling...\n");
 		for (int j = 0; j < 4; j++){
-			printf("%d && %d = %d\n", j/2 , j%2, t.sample(j/2, j%2));
+			printf("%d && %d = %d\n", j/2 , j%2, t.sample(j/2, j%2) > 0.5);
 		}
 		/*
 		  Taken out until it can be properly reimplemented

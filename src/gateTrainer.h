@@ -1,8 +1,8 @@
 #ifndef GATE_TRAINER_HEADER_INCLUDED
 #define GATE_TRAINER_HEADER_INCLUDED
-#include <string>
 #include "network.h"
 #include "trainer.h"
+#include <functional>
 
 class GateTrainer: public Trainer{
 private:

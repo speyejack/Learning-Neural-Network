@@ -1,8 +1,10 @@
+#include "gateTrainer.h"
 #include "network.h"
 #include "trainer.h"
+#include <functional>
 #include <vector>
 
-GateTrainer::GateTrainer(Network* net, int batch, double learning_rate, std::function<bool(bool, bool)> gate): Trainer(net, batch, learning_rate), gate(gate);{
+GateTrainer::GateTrainer(Network* net, int batch, double learning_rate, std::function<bool(bool, bool)> gate): Trainer(net, batch, learning_rate), gate(gate){
 	
 }
 
@@ -22,6 +24,8 @@ double GateTrainer::sample(bool input1, bool input2){
 	
 	std::vector<double> input(2, 0);
 	std::vector<double> output(1, 0);
+	input[0] = input1;
+	input[1] = input2;
 	output = net->forward_prop(input);
 
 	return output[0];
