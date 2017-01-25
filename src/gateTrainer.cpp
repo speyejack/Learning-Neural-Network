@@ -21,12 +21,12 @@ void GateTrainer::train(){
 }
 
 double GateTrainer::sample(bool input1, bool input2){
-	
+	net->reset();
 	std::vector<double> input(2, 0);
 	std::vector<double> output(1, 0);
 	input[0] = input1;
 	input[1] = input2;
 	output = net->forward_prop(input);
-
+	
 	return output[0];
 }

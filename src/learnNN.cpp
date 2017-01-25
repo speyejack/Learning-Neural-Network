@@ -24,6 +24,7 @@ int main(){
 		for (int j = 0; j < 4; j++){
 			printf("%d && %d = %d\n", j/2 , j%2, t.sample(j/2, j%2) > 0.5);
 		}
+		net.reset();
 		/*
 		  Taken out until it can be properly reimplemented
 		if (!(i % 100 || true)){

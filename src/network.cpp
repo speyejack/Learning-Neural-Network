@@ -45,7 +45,7 @@ void Network::back_prop(std::vector<double>& error){
 void Network::apply_error(double learning_rate){
 	for(int i = layers.size() - 1; i >= 0; i--){
 		errOut = layers[i]->back_prop(errOut);
-		layers[i]->reset();
+		//layers[i]->reset();
 	}
 	errOut = NULL;
 }
@@ -60,6 +60,13 @@ void Network::write_to_json(std::ostream& os){
 		os << "\"Layer\" : " << *layers[i] << "," << std::endl ;
 	}
 	os << "}" << std::endl;
+}
+
+void Network::reset(){
+	
+	for(unsigned int i = 0; i < layers.size(); i++){
+		layers[i]->reset();
+	}
 }
 
 std::ostream& operator<<(std::ostream& os, Network& net){

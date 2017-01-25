@@ -235,11 +235,29 @@ ErrorOutput* Layer::back_prop(ErrorOutput* errorOut){
 	state->err_state = errS;
 	
 	ErrorOutput* out = apply_back_prop(errorOut);
+	state = top;
+	top = NULL;
+	
+	deleteErrorOutput(errorOut);
+	errorOut = NULL;
+	
 	reset();
 	return out;
 }
 
 ErrorOutput* Layer::apply_back_prop(ErrorOutput* errorOut){
+
+	// If at end of chain, generate blank weight errors to return
+	if (state->prev_state == NULL){
+		ErrorOutput* lErr = new ErrorOutput();
+		
+		lErr->last = NULL;
+		lErr->input_werr = create_empty_weights(output_size, input_size);
+		lErr->forget_werr = create_empty_weights(output_size, input_size);
+		lErr->activate_werr = create_empty_weights(output_size, input_size);
+		lErr->output_werr = create_empty_weights(output_size, input_size);
+		return lErr;
+	}
 	
 	ErrorMatrix* error_input =  state->err_state->error_input;
 	ErrorMatrix* error_forget =  state->err_state->error_forget;
@@ -302,20 +320,11 @@ ErrorOutput* Layer::apply_back_prop(ErrorOutput* errorOut){
 	
 	ErrorOutput* err_o = new ErrorOutput();
 	
-	if (state->prev_state->prev_state == NULL){
-		ErrorOutput* lErr = new ErrorOutput();
-		lErr->input_werr = create_empty_weights(output_size, input_size);
-		lErr->forget_werr = create_empty_weights(output_size, input_size);
-		lErr->activate_werr = create_empty_weights(output_size, input_size);
-		lErr->output_werr = create_empty_weights(output_size, input_size);
-		err_o->last = lErr;
-	} else {
-		State* cur_state = state;
-		state = state->prev_state;
-		// Recursive call
-		err_o->last = apply_back_prop(errorOut->last);
-		state = cur_state;
-	}
+	State* cur_state = state;
+	state = state->prev_state;
+	// Recursive call
+	err_o->last = apply_back_prop(errorOut->last);
+	state = cur_state;
 	
     err_o->inputError =
 		new Matrix(input_w.input->transpose().dot(d_i) +
@@ -345,16 +354,12 @@ void Layer::apply_error(double learning_rate){
 }
 
 void Layer::reset(){
-	deleteState(top);
-	deleteErrorOutput(errorOut);
+	deleteState(state);
 	state = NULL;
-	top = NULL;
-	errorOut = NULL;
 	
 	state = new State();
 	state->output = new Vector(output_size);
 	state->memory = new Vector(output_size);
-	
 }
 
 void Layer::write_to_json(std::ostream& os){

@@ -18,6 +18,7 @@ public:
 	void back_prop(std::vector<double>& error);
 	void apply_error(double learning_rate);
 	void write_to_json(std::ostream& os);
+	void reset();
 };
 
 std::ostream& operator<<(std::ostream& os, Network& net);
