@@ -55,15 +55,19 @@ Weights* createWeightErrors(State* state, Matrix* error, Weights* prev_error){
 	bias.set_value(0,0,1);
 	
 	Weights* weights = new Weights();
+	// input weight is input->output size
 	weights->input =
 		new Matrix(error->dot(state->input->transpose()) +
 				   *prev_error->input);
+	// output weight is output->output size
 	weights->output =
 		new Matrix(error->dot(state->prev_state->output->transpose()) +
 				   *prev_error->output);
+	// memory weight is output->output size
 	weights->memory =
 		new Matrix(error->dot(state->memory->transpose()) +
 				   *prev_error->memory);
+	// bias weight is 1->output size
 	weights->bias =
 		new Matrix(error->dot(bias.transpose()) +
 				   *prev_error->bias);
@@ -206,7 +210,6 @@ Vector Layer::forward_prop(Vector& input){
 	Vector output = (Vector) (output_g * activated_mem);
 
 	
-	state->prev_state = prev_state;
 	state->input = new Vector(input);
 	state->memory = new Vector(*memory);
 	state->output = new Vector(output);
@@ -221,29 +224,22 @@ Vector Layer::forward_prop(Vector& input){
 
 ErrorOutput* Layer::back_prop(ErrorOutput* errorOut){
 	State* top = state;
+	// Initial blank err state
+	ErrorState* errS = new ErrorState();
+	errS->error_input = createErrorMatrix(this->output_size);
+	errS->error_forget = createErrorMatrix(this->output_size);
+	errS->error_activate = createErrorMatrix(this->output_size);
+	errS->error_output = createErrorMatrix(this->output_size);
+	errS->error_memory = new Vector(this->output_size);
+	errS->forget_gate = new Matrix(state->forget_gateP->sigmoid());
+	state->err_state = errS;
 	
 	ErrorOutput* out = apply_back_prop(errorOut);
-	deleteState(top);
-	deleteErrorOutput(errorOut);
-	top = NULL;
-	errorOut = NULL;
-	
 	reset();
 	return out;
 }
 
 ErrorOutput* Layer::apply_back_prop(ErrorOutput* errorOut){
-	
-	if (state->err_state == NULL){
-		ErrorState* errS = new ErrorState();
-		errS->error_input = createErrorMatrix(this->output_size);
-		errS->error_forget = createErrorMatrix(this->output_size);
-		errS->error_activate = createErrorMatrix(this->output_size);
-		errS->error_output = createErrorMatrix(this->output_size);
-	    errS->error_memory = new Vector(this->output_size);
-		errS->forget_gate = new Matrix(state->forget_gateP->sigmoid());
-		state->err_state = errS;
-	}
 	
 	ErrorMatrix* error_input =  state->err_state->error_input;
 	ErrorMatrix* error_forget =  state->err_state->error_forget;
@@ -275,7 +271,6 @@ ErrorOutput* Layer::apply_back_prop(ErrorOutput* errorOut){
 		d_mem * state->input_gateP->sigmoid() *
 		state->activation_gateP->sigDeriv();
 	// Done with major back prop calculations
-
 	
 	
 	ErrorState* err = new ErrorState();
@@ -308,18 +303,15 @@ ErrorOutput* Layer::apply_back_prop(ErrorOutput* errorOut){
 	ErrorOutput* err_o = new ErrorOutput();
 	
 	if (state->prev_state->prev_state == NULL){
-		state->prev_state = new State();
-		state->prev_state->output = new Vector(input_size);
 		ErrorOutput* lErr = new ErrorOutput();
 		lErr->input_werr = create_empty_weights(output_size, input_size);
-		lErr->forget_werr = create_empty_weights(output_size, output_size);
-		lErr->activate_werr = create_empty_weights(output_size, output_size);
-		lErr->output_werr = create_empty_weights(output_size, output_size);
+		lErr->forget_werr = create_empty_weights(output_size, input_size);
+		lErr->activate_werr = create_empty_weights(output_size, input_size);
+		lErr->output_werr = create_empty_weights(output_size, input_size);
 		err_o->last = lErr;
 	} else {
 		State* cur_state = state;
 		state = state->prev_state;
-		// If at end of chain, just return
 		// Recursive call
 		err_o->last = apply_back_prop(errorOut->last);
 		state = cur_state;
@@ -330,7 +322,7 @@ ErrorOutput* Layer::apply_back_prop(ErrorOutput* errorOut){
 				   forget_w.input->transpose().dot(d_f) +
 				   activate_w.input->transpose().dot(d_a) +
 				   output_w.input->transpose().dot(d_o));
-
+	// The problem is the state->prev_state->output doesn't the correct size
 	err_o->input_werr = createWeightErrors(state, &d_i,
 										   err_o->last->input_werr);
 	err_o->forget_werr = createWeightErrors(state, &d_f,
@@ -353,13 +345,15 @@ void Layer::apply_error(double learning_rate){
 }
 
 void Layer::reset(){
-	if (state == NULL){
-		state = new State();
-		state->output = new Vector(output_size);
-		state->memory = new Vector(output_size);
-	}
+	deleteState(top);
+	deleteErrorOutput(errorOut);
+	state = NULL;
+	top = NULL;
+	errorOut = NULL;
 	
-	memory->clear_matrix();
+	state = new State();
+	state->output = new Vector(output_size);
+	state->memory = new Vector(output_size);
 	
 }
 
