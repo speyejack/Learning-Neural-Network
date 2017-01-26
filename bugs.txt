@@ -1,0 +1,4 @@
+BUG:
+-If you set a training batch size = 10000, it will get a seg fault.
+
+- Currently after running network it converges to answers being NAN
