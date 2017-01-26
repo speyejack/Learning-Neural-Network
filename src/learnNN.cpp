@@ -14,7 +14,7 @@ int main(){
 	std::cout << "Seed: " << seed << std::endl;
 	Network net(layers, {seed});
 	
-	GateTrainer t(&net, 1, 0.2,
+	GateTrainer t(&net, 1000, 0.5,
 				  [](bool input1, bool input2) -> bool {
 					  return input1 && input2;
 				  });
@@ -22,7 +22,7 @@ int main(){
 		t.train();
 		printf("Sampling...\n");
 		for (int j = 0; j < 4; j++){
-			printf("%d && %d = %d\n", j/2 , j%2, t.sample(j/2, j%2) > 0.5);
+			printf("%d && %d = %.3f\n", j/2 , j%2, t.sample(j/2, j%2));
 		}
 		net.reset();
 		/*

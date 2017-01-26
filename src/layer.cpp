@@ -149,6 +149,17 @@ void deleteState(State* state){
 	deleteState(next);
 }
 
+Weights Layer::applyWeightError(Weights w, Weights* error, Weights* momentum, double learning_rate){
+	Weights new_w;
+	new_w.input = new Matrix(*w.input * learning_rate + *error->input * (1 - learning_rate));
+	new_w.output = new Matrix(*w.output * learning_rate + *error->output * (1 - learning_rate));
+	new_w.memory = new Matrix(*w.memory * learning_rate + *error->memory * (1 - learning_rate));
+	new_w.bias = new Matrix(*w.bias * learning_rate + *error->bias * (1 - learning_rate));
+	
+	delete_weights(w);
+	return new_w;
+}
+
 Layer::Layer(int input_size, int output_size, std::default_random_engine& gen){
 	this->input_size = input_size;
 	this->output_size = output_size;
@@ -234,7 +245,13 @@ ErrorOutput* Layer::back_prop(ErrorOutput* errorOut){
 	errS->forget_gate = new Matrix(state->forget_gateP->sigmoid());
 	state->err_state = errS;
 	
-	ErrorOutput* out = apply_back_prop(errorOut);
+	ErrorOutput* out = get_back_prop(errorOut);
+
+	input_w = applyWeightError(input_w, out->input_werr, NULL, 0.2);
+	forget_w = applyWeightError(forget_w, out->forget_werr, NULL, 0.2);
+	activate_w = applyWeightError(activate_w, out->activate_werr, NULL, 0.2);
+	output_w = applyWeightError(output_w, out->output_werr, NULL, 0.2);
+	
 	state = top;
 	top = NULL;
 	
@@ -245,7 +262,7 @@ ErrorOutput* Layer::back_prop(ErrorOutput* errorOut){
 	return out;
 }
 
-ErrorOutput* Layer::apply_back_prop(ErrorOutput* errorOut){
+ErrorOutput* Layer::get_back_prop(ErrorOutput* errorOut){
 
 	// If at end of chain, generate blank weight errors to return
 	if (state->prev_state == NULL){
@@ -323,7 +340,7 @@ ErrorOutput* Layer::apply_back_prop(ErrorOutput* errorOut){
 	State* cur_state = state;
 	state = state->prev_state;
 	// Recursive call
-	err_o->last = apply_back_prop(errorOut->last);
+	err_o->last = get_back_prop(errorOut->last);
 	state = cur_state;
 	
     err_o->inputError =

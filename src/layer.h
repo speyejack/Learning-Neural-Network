@@ -13,7 +13,6 @@ typedef struct Weights{
 	Matrix* bias;
 } Weights;
 
-
 // Struct to return from backprop
 typedef struct ErrorOutput{ 
 	ErrorOutput* last;
@@ -69,7 +68,8 @@ class Layer {
 	void clear_error();
 	void delete_state();
 	void delete_weights(Weights w);
-	ErrorOutput* apply_back_prop(ErrorOutput* error);
+	ErrorOutput* get_back_prop(ErrorOutput* error);
+	Weights applyWeightError(Weights, Weights*, Weights*, double);
 	
  public:
 	
@@ -80,7 +80,7 @@ class Layer {
 
 	
 	Vector forward_prop(Vector& input);
-	ErrorOutput* back_prop(ErrorOutput* error);
+ErrorOutput* back_prop(ErrorOutput* error);
 	void apply_error(double learning_rate);
 	void reset();
 	void write_to_json(std::ostream&);
