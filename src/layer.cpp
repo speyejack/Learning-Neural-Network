@@ -22,8 +22,6 @@
   }
 */
 
-
-
 Weights create_weights(int output_size, int input_size,
 					   std::default_random_engine& gen,
 					   double mean, double stddev){
@@ -151,10 +149,10 @@ void deleteState(State* state){
 
 Weights Layer::applyWeightError(Weights w, Weights* error, Weights* momentum, double learning_rate){
 	Weights new_w;
-	new_w.input = new Matrix(*w.input * learning_rate + *error->input * (1 - learning_rate));
-	new_w.output = new Matrix(*w.output * learning_rate + *error->output * (1 - learning_rate));
-	new_w.memory = new Matrix(*w.memory * learning_rate + *error->memory * (1 - learning_rate));
-	new_w.bias = new Matrix(*w.bias * learning_rate + *error->bias * (1 - learning_rate));
+	new_w.input = new Matrix(*w.input + *error->input * learning_rate);
+	new_w.output = new Matrix(*w.output + *error->output * learning_rate);
+	new_w.memory = new Matrix(*w.memory + *error->memory * learning_rate);
+	new_w.bias = new Matrix(*w.bias + *error->bias * learning_rate);
 	
 	delete_weights(w);
 	return new_w;
