@@ -219,7 +219,6 @@ Vector Layer::forward_prop(Vector& input){
 	Matrix output_g = output_g_p.sigmoid();
 
 	Vector output = (Vector) (output_g * activated_mem);
-
 	
 	state->input = new Vector(input);
 	state->memory = new Vector(*memory);
@@ -233,7 +232,7 @@ Vector Layer::forward_prop(Vector& input){
 	return output;
 }
 
-ErrorOutput* Layer::back_prop(ErrorOutput* errorOut){
+ErrorOutput* Layer::back_prop(ErrorOutput* errorOut, double learning_rate){
 	State* top = state;
 	// Initial blank err state
 	ErrorState* errS = new ErrorState();
@@ -247,10 +246,10 @@ ErrorOutput* Layer::back_prop(ErrorOutput* errorOut){
 	
 	ErrorOutput* out = get_back_prop(errorOut);
 
-	input_w = applyWeightError(input_w, out->input_werr, NULL, 0.2);
-	forget_w = applyWeightError(forget_w, out->forget_werr, NULL, 0.2);
-	activate_w = applyWeightError(activate_w, out->activate_werr, NULL, 0.2);
-	output_w = applyWeightError(output_w, out->output_werr, NULL, 0.2);
+	input_w = applyWeightError(input_w, out->input_werr, NULL, learning_rate);
+	forget_w = applyWeightError(forget_w, out->forget_werr, NULL, learning_rate);
+	activate_w = applyWeightError(activate_w, out->activate_werr, NULL, learning_rate);
+	output_w = applyWeightError(output_w, out->output_werr, NULL, learning_rate);
 	
 	state = top;
 	top = NULL;
@@ -360,14 +359,6 @@ ErrorOutput* Layer::get_back_prop(ErrorOutput* errorOut){
 	
 	
 	return err_o;
-}
-
-void Layer::clear_error(){
-	// Changing how this error error prop works
-}
-
-void Layer::apply_error(double learning_rate){
-	// Changing how this error error prop works
 }
 
 void Layer::reset(){

@@ -65,7 +65,6 @@ class Layer {
 	Weights output_w;
 	Vector* memory;
 	State* state;
-	void clear_error();
 	void delete_state();
 	void delete_weights(Weights w);
 	ErrorOutput* get_back_prop(ErrorOutput* error);
@@ -80,8 +79,7 @@ class Layer {
 
 	
 	Vector forward_prop(Vector& input);
-ErrorOutput* back_prop(ErrorOutput* error);
-	void apply_error(double learning_rate);
+	ErrorOutput* back_prop(ErrorOutput* error, double learning_rate);
 	void reset();
 	void write_to_json(std::ostream&);
 };
