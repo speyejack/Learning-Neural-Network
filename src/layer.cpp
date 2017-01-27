@@ -201,6 +201,7 @@ Vector Layer::forward_prop(Vector& input){
 		forget_w.bias->dot(bias);
 	Matrix forget_g = forget_g_p.sigmoid();
 
+
 	Matrix activation_g_p = activate_w.input->dot(input) +
 		activate_w.output->dot(*state->prev_state->output) +
 		activate_w.bias->dot(bias);
