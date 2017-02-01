@@ -4,7 +4,7 @@
 #include "vector.h"
 #include <random>
 #include <ostream>
-// THOUGHT: Structs in structs?
+
 // Struct to hold each weight matrix
 typedef struct Weights{
 	Matrix* input;
@@ -59,16 +59,24 @@ class Layer {
  private:
 	int input_size;
 	int output_size;
+	
 	Weights forget_w;
     Weights activate_w;
     Weights input_w;
 	Weights output_w;
+	
+	Weights forget_wm;
+    Weights activate_wm;
+    Weights input_wm;
+	Weights output_wm;
+	
 	Vector* memory;
 	State* state;
+	
 	void delete_state();
 	void delete_weights(Weights w);
 	ErrorOutput* get_back_prop(ErrorOutput* error);
-	Weights applyWeightError(Weights, Weights*, Weights*, double);
+	Weights applyWeightError(Weights, Weights*, Weights*, double, double);
 	
  public:
 	

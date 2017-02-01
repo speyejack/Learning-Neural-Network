@@ -4,23 +4,7 @@
 #include <assert.h>
 #include <ostream>
 
-/*
 
-  TODO: All this is broken
-
-  Layer::~Layer(){
-  delete_state();
-  delete_weights(forget_w);
-  delete_weights(activate_w);
-  delete_weights(input_w);
-  delete_weights(output_w);
-  delete memory;
-  delete error.err_input_w;
-  delete error.err_activate_w;
-  delete error.err_forget_w;
-  delete error.err_output_w;
-  }
-*/
 
 Weights create_weights(int output_size, int input_size,
 					   std::default_random_engine& gen,
@@ -35,6 +19,16 @@ Weights create_weights(int output_size, int input_size,
 	w.output->fill_gaussian(gen, mean, stddev);
 	w.memory->fill_gaussian(gen, mean, stddev);
 	w.bias->fill_gaussian(gen, mean, stddev);
+	return w;
+}
+
+Weights createEmptyWeights(int output_size, int input_size){
+	Weights w = {0, 0, 0, 0};
+	w.input = new Matrix(output_size, input_size);
+	w.output = new Matrix(output_size, output_size);
+ 	w.memory = new Matrix(output_size, output_size);
+	w.bias = new Matrix(output_size, 1);
+	
 	return w;
 }
 
@@ -147,7 +141,7 @@ void deleteState(State* state){
 	deleteState(next);
 }
 
-Weights Layer::applyWeightError(Weights w, Weights* error, Weights* momentum, double learning_rate){
+Weights Layer::applyWeightError(Weights w, Weights* error, Weights* momentum, double learning_rate, double percent){
 	Weights new_w;
 	new_w.input = new Matrix(*w.input + *error->input * learning_rate);
 	new_w.output = new Matrix(*w.output + *error->output * learning_rate);
@@ -155,7 +149,23 @@ Weights Layer::applyWeightError(Weights w, Weights* error, Weights* momentum, do
 	new_w.bias = new Matrix(*w.bias + *error->bias * learning_rate);
 	
 	delete_weights(w);
+
 	return new_w;
+}
+
+Layer::~Layer(){
+	deleteState(state);
+	state = NULL;
+	delete_weights(forget_w);
+	delete_weights(activate_w);
+	delete_weights(input_w);
+	delete_weights(output_w);
+	
+	delete_weights(forget_wm);
+	delete_weights(activate_wm);
+	delete_weights(input_wm);
+	delete_weights(output_wm);
+	delete memory;
 }
 
 Layer::Layer(int input_size, int output_size, std::default_random_engine& gen){
@@ -166,15 +176,13 @@ Layer::Layer(int input_size, int output_size, std::default_random_engine& gen){
 	activate_w = create_weights(output_size, input_size, gen, 0, 0.1);
 	forget_w = create_weights(output_size, input_size, gen, 0, 0.1);
 	output_w = create_weights(output_size, input_size, gen, 0, 0.1);
+	input_wm = createEmptyWeights(output_size, input_size);
+	input_wm = createEmptyWeights(output_size, input_size);
+	input_wm = createEmptyWeights(output_size, input_size);
+	input_wm = createEmptyWeights(output_size, input_size);
 	memory = new Vector(output_size);
 	state = NULL;
 	reset();
-}
-
-Layer::~Layer(){
-	// I know, really bad memory leaks.
-	// Just have to get the prop going first, then Ill go back.
-	printf("Layer deconstructor broken");
 }
 
 Vector Layer::forward_prop(Vector& input){
@@ -242,13 +250,22 @@ ErrorOutput* Layer::back_prop(ErrorOutput* errorOut, double learning_rate){
 	errS->error_memory = new Vector(this->output_size);
 	errS->forget_gate = new Matrix(state->forget_gateP->sigmoid());
 	state->err_state = errS;
+	int counter = 0;
+	ErrorOutput* trav = errorOut;
+	while (trav != NULL){
+		counter++;
+		trav = trav->last;
+	}
 	
 	ErrorOutput* out = get_back_prop(errorOut);
 
-	input_w = applyWeightError(input_w, out->input_werr, NULL, learning_rate);
-	forget_w = applyWeightError(forget_w, out->forget_werr, NULL, learning_rate);
-	activate_w = applyWeightError(activate_w, out->activate_werr, NULL, learning_rate);
-	output_w = applyWeightError(output_w, out->output_werr, NULL, learning_rate);
+	double rate = learning_rate / counter;
+
+	double perc = 0.5;
+	input_w = applyWeightError(input_w, out->input_werr, NULL, rate, perc);
+	forget_w = applyWeightError(forget_w, out->forget_werr, NULL, rate, perc);
+	activate_w = applyWeightError(activate_w, out->activate_werr, NULL, rate, perc);
+	output_w = applyWeightError(output_w, out->output_werr, NULL, rate, perc);
 	
 	state = top;
 	top = NULL;
