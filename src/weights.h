@@ -33,4 +33,5 @@ void fillWeight(Weight* w, int output_size, int input_size,
 void fillBundle(WeightBundle* bundle,
 				std::default_random_engine& gen,
 				double mean, double stddev);
+void replaceWeight(Weight* old_w, Weight* new_w);
 #endif

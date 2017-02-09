@@ -33,6 +33,8 @@ void deleteWeight(Weight* weight){
 }
 
 void deleteWeightBundle(WeightBundle* bundle){
+	if (bundle == NULL)
+		return;
 	deleteWeight(bundle->input);
 	deleteWeight(bundle->forget);
 	deleteWeight(bundle->activate);
@@ -56,4 +58,16 @@ void fillBundle(WeightBundle* bundle,
 	fillWeight(bundle->forget, gen, mean, stddev);
 	fillWeight(bundle->activate, gen, mean, stddev);
 	fillWeight(bundle->output, gen, mean, stddev);
+}
+
+void replaceWeight(Weight* old_w, Weight* new_w){
+	delete old_w->input;
+	delete old_w->memory;
+	delete old_w->output;
+	delete old_w->bias;
+
+	old_w->input = new Matrix(*new_w->input);
+	old_w->memory = new Matrix(*new_w->memory);
+	old_w->output = new Matrix(*new_w->output);
+	old_w->bias = new Matrix(*new_w->bias);
 }

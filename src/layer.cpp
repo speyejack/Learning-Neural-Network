@@ -1,94 +1,49 @@
 #include "layer.h"
 #include "matrix.h"
 #include "vector.h"
+#include "weights.h"
 #include <assert.h>
 #include <ostream>
 
-
-
-Weights create_weights(int output_size, int input_size,
-					   std::default_random_engine& gen,
-					   double mean, double stddev){
-	Weights w = {0, 0, 0, 0};
-	w.input = new Matrix(output_size, input_size);
-	w.output = new Matrix(output_size, output_size);
- 	w.memory = new Matrix(output_size, output_size);
-	w.bias = new Matrix(output_size, 1);
-	
-	w.input->fill_gaussian(gen, mean, stddev);
-	w.output->fill_gaussian(gen, mean, stddev);
-	w.memory->fill_gaussian(gen, mean, stddev);
-	w.bias->fill_gaussian(gen, mean, stddev);
-	return w;
-}
-
-Weights createEmptyWeights(int output_size, int input_size){
-	Weights w = {0, 0, 0, 0};
-	w.input = new Matrix(output_size, input_size);
-	w.output = new Matrix(output_size, output_size);
- 	w.memory = new Matrix(output_size, output_size);
-	w.bias = new Matrix(output_size, 1);
-	
-	return w;
-}
-
-Weights* create_empty_weights(int output_size, int input_size){
-	Weights* w = new Weights();
-	w->input = new Matrix(output_size, input_size);
-	w->output = new Matrix(output_size, output_size);
- 	w->memory = new Matrix(output_size, output_size);
-	w->bias = new Matrix(output_size, 1);
-	
-	return w;
-}
-
-Weights* createWeightErrors(State* state, Matrix* error, Weights* prev_error){
+void updateWeightErrors(Weight* matErr, State* state, Matrix* error){
 	Vector bias(1);
 	bias.set_value(0,0,1);
 	
-	Weights* weights = new Weights();
+	
 	// input weight is input->output size
-	weights->input =
-		new Matrix(error->dot(state->input->transpose()) +
-				   *prev_error->input);
+	Matrix input = error->dot(state->input->transpose()) +
+		*matErr->input;
+	delete matErr->input;
+	matErr->input = new Matrix(input);
+	
 	// output weight is output->output size
-	weights->output =
-		new Matrix(error->dot(state->prev_state->output->transpose()) +
-				   *prev_error->output);
+	Matrix output = error->dot(state->prev_state->output->transpose()) +
+		*matErr->output;
+	delete matErr->output;
+	matErr->output = new Matrix(output);
+	
+
 	// memory weight is output->output size
-	weights->memory =
-		new Matrix(error->dot(state->memory->transpose()) +
-				   *prev_error->memory);
+	Matrix memory = error->dot(state->memory->transpose()) +
+		*matErr->memory;
+	delete matErr->memory;
+	matErr->memory = new Matrix(memory);
+	
 	// bias weight is 1->output size
-	weights->bias =
-		new Matrix(error->dot(bias.transpose()) +
-				   *prev_error->bias);
-	return weights;
+	Matrix bias_e = error->dot(bias.transpose()) +
+		*matErr->bias;
+	delete matErr->bias;
+	matErr->bias = new Matrix(bias_e);
 }
 
 ErrorMatrix* createErrorMatrix(int size){
 	ErrorMatrix* err = new ErrorMatrix();
 	err->output = new Vector(size);
 	err->memory = new Vector(size);
+
 	return err;
 }
 
-void Layer::delete_weights(Weights w){
-	delete w.input;
-	delete w.output;
-	delete w.memory;
-	delete w.bias;
-}
-
-void deleteWeights(Weights* weights){
-	if (weights == NULL)
-		return;
-	delete weights->input;
-	delete weights->output;
-	delete weights->memory;
-	delete weights->bias;
-	delete weights;
-}
 
 void deleteErrorMatrix(ErrorMatrix* errorMat){
 	if (errorMat == NULL)
@@ -96,6 +51,14 @@ void deleteErrorMatrix(ErrorMatrix* errorMat){
 	delete errorMat->output;
 	delete errorMat->memory;
 	delete errorMat;
+}
+
+void deleteErrorList(ErrorList* list){
+	if (list == NULL)
+		return;
+    ErrorList* next = list->last;
+	delete list;
+	deleteErrorList(next);
 }
 
 void deleteErrorState(ErrorState* eState){
@@ -110,24 +73,11 @@ void deleteErrorState(ErrorState* eState){
 	delete eState;
 }
 
-void deleteErrorOutput(ErrorOutput*);
-void deleteErrorOutput(ErrorOutput* errorOut){
-	if (errorOut == NULL)
-		return;
-	delete errorOut->inputError;
-	deleteWeights(errorOut->input_werr);
-	deleteWeights(errorOut->forget_werr);
-	deleteWeights(errorOut->activate_werr);
-	deleteWeights(errorOut->output_werr);
-	ErrorOutput* next = errorOut->last;
-	delete errorOut;
-	deleteErrorOutput(next);
-}
-
 void deleteState(State*);
 void deleteState(State* state){
 	if (state == NULL)
 		return;
+	State* next = state->prev_state;
 	deleteErrorState(state->err_state);
 	delete state->input;
 	delete state->memory;
@@ -136,53 +86,59 @@ void deleteState(State* state){
 	delete state->forget_gateP;
 	delete state->activation_gateP;
 	delete state->output_gateP;
-	State* next = state->prev_state;
 	delete state;
 	deleteState(next);
 }
 
-Weights Layer::applyWeightError(Weights w, Weights* error, Weights* momentum, double learning_rate, double percent){
-	Weights new_w;
-	new_w.input = new Matrix(*w.input + *error->input * learning_rate);
-	new_w.output = new Matrix(*w.output + *error->output * learning_rate);
-	new_w.memory = new Matrix(*w.memory + *error->memory * learning_rate);
-	new_w.bias = new Matrix(*w.bias + *error->bias * learning_rate);
-	
-	delete_weights(w);
+void adjustWeight(Weight* w, Weight* error, Weight* momentum, double learning_rate, double momentum_rate){
+	Weight* new_mom = new Weight();
+	Weight* new_w = new Weight();
 
-	return new_w;
+	new_mom->input = new Matrix(*error->input * learning_rate + *momentum->input * momentum_rate);
+	new_mom->output = new Matrix(*error->output * learning_rate + *momentum->output * momentum_rate);
+	new_mom->memory= new Matrix(*error->memory * learning_rate + *momentum->memory * momentum_rate);
+	new_mom->bias= new Matrix(*error->bias * learning_rate + *momentum->bias * momentum_rate);
+
+	replaceWeight(momentum, new_mom);
+	deleteWeight(new_mom);
+	
+	new_w->input = new Matrix(*w->input + *momentum->input);
+	new_w->output = new Matrix(*w->output + *momentum->output);
+	new_w->memory = new Matrix(*w->memory + *momentum->memory);
+	new_w->bias = new Matrix(*w->bias + *momentum->bias);
+	
+	replaceWeight(w, new_w);
+	deleteWeight(new_w);
 }
 
 Layer::~Layer(){
 	deleteState(state);
 	state = NULL;
-	delete_weights(forget_w);
-	delete_weights(activate_w);
-	delete_weights(input_w);
-	delete_weights(output_w);
-	
-	delete_weights(forget_wm);
-	delete_weights(activate_wm);
-	delete_weights(input_wm);
-	delete_weights(output_wm);
+	deleteWeightBundle(weights);
+	deleteWeightBundle(momentum);
 	delete memory;
 }
 
 Layer::Layer(int input_size, int output_size, std::default_random_engine& gen){
 	this->input_size = input_size;
 	this->output_size = output_size;
+
+	weights = createWeightBundle(input_size, output_size);
+	momentum = createWeightBundle(input_size, output_size);
+	fillBundle(weights, gen, 0, 0.1);
 	
-	input_w = create_weights(output_size, input_size, gen, 0, 0.1);
-	activate_w = create_weights(output_size, input_size, gen, 0, 0.1);
-	forget_w = create_weights(output_size, input_size, gen, 0, 0.1);
-	output_w = create_weights(output_size, input_size, gen, 0, 0.1);
-	input_wm = createEmptyWeights(output_size, input_size);
-	input_wm = createEmptyWeights(output_size, input_size);
-	input_wm = createEmptyWeights(output_size, input_size);
-	input_wm = createEmptyWeights(output_size, input_size);
 	memory = new Vector(output_size);
 	state = NULL;
 	reset();
+}
+
+Matrix getPrimitiveGate(Weight* weight, Vector* input, Vector* memory, Vector* output, Vector* bias){
+	Matrix gate = weight->input->dot(*input) +
+		weight->output->dot(*output) +
+		weight->bias->dot(*bias);
+	if (memory != NULL)
+		gate = gate + weight->memory->dot(*memory);
+	return gate;
 }
 
 Vector Layer::forward_prop(Vector& input){
@@ -196,37 +152,33 @@ Vector Layer::forward_prop(Vector& input){
 	Vector bias(1);
 	bias.set_value(0,0,1);
 
-	
-	Matrix input_g_p = input_w.input->dot(input) +
-		input_w.output->dot(*state->prev_state->output) +
-		input_w.memory->dot(*memory) +
-		input_w.bias->dot(bias);
+	Matrix input_g_p =
+		getPrimitiveGate(weights->input, &input,
+						 memory, state->prev_state->output, &bias);
 	Matrix input_g = input_g_p.sigmoid();
 
-	Matrix forget_g_p = forget_w.input->dot(input) +
-		forget_w.output->dot(*state->prev_state->output) +
-		forget_w.memory->dot(*memory) +
-		forget_w.bias->dot(bias);
+	Matrix forget_g_p =
+		getPrimitiveGate(weights->forget, &input,
+						 memory, state->prev_state->output, &bias);
 	Matrix forget_g = forget_g_p.sigmoid();
 
-
-	Matrix activation_g_p = activate_w.input->dot(input) +
-		activate_w.output->dot(*state->prev_state->output) +
-		activate_w.bias->dot(bias);
+	Matrix activation_g_p =
+		getPrimitiveGate(weights->activate, &input,
+						 NULL, state->prev_state->output, &bias);
 	Matrix activation_g = activation_g_p.Mtanh();
-	Matrix temp = forget_g * *memory + input_g * activation_g;
-	memory = new Vector(temp);
-	Vector activated_mem = memory->Mtanh();
-
 	
-	Matrix output_g_p = output_w.input->dot(input) +
-		output_w.output->dot(*state->prev_state->output) +
-		output_w.memory->dot(*memory) +
-		output_w.bias->dot(bias);
+	Matrix new_mem = forget_g * *memory + input_g * activation_g;
+	memory = new Vector(new_mem);
+	Vector activated_mem = memory->Mtanh();
+	
+	Matrix output_g_p =
+		getPrimitiveGate(weights->output, &input,
+						 memory, state->prev_state->output, &bias);
 	Matrix output_g = output_g_p.sigmoid();
 
 	Vector output = (Vector) (output_g * activated_mem);
-	
+
+	// Lots of assignments...
 	state->input = new Vector(input);
 	state->memory = new Vector(*memory);
 	state->output = new Vector(output);
@@ -239,7 +191,7 @@ Vector Layer::forward_prop(Vector& input){
 	return output;
 }
 
-ErrorOutput* Layer::back_prop(ErrorOutput* errorOut, double learning_rate){
+ErrorList* Layer::back_prop(ErrorList* errIn, double learning_rate){
 	State* top = state;
 	// Initial blank err state
 	ErrorState* errS = new ErrorState();
@@ -250,45 +202,37 @@ ErrorOutput* Layer::back_prop(ErrorOutput* errorOut, double learning_rate){
 	errS->error_memory = new Vector(this->output_size);
 	errS->forget_gate = new Matrix(state->forget_gateP->sigmoid());
 	state->err_state = errS;
-	int counter = 0;
-	ErrorOutput* trav = errorOut;
-	while (trav != NULL){
-		counter++;
-		trav = trav->last;
-	}
 	
-	ErrorOutput* out = get_back_prop(errorOut);
+	ErrorList* errOut = new ErrorList();
+	WeightBundle* adjustments = createWeightBundle(input_size, output_size);
+	
+	int counter = get_back_prop(errOut, adjustments, errIn);
 
-	double rate = learning_rate / counter;
-
-	double perc = 0.5;
-	input_w = applyWeightError(input_w, out->input_werr, NULL, rate, perc);
-	forget_w = applyWeightError(forget_w, out->forget_werr, NULL, rate, perc);
-	activate_w = applyWeightError(activate_w, out->activate_werr, NULL, rate, perc);
-	output_w = applyWeightError(output_w, out->output_werr, NULL, rate, perc);
+	double l_rate = learning_rate / counter;
+	double momentum_rate = 0.5;
+	
+	adjustWeight(weights->input, adjustments->input, momentum->input, l_rate, momentum_rate);
+	adjustWeight(weights->forget, adjustments->forget, momentum->forget, l_rate, momentum_rate);
+	adjustWeight(weights->activate, adjustments->activate, momentum->activate, l_rate, momentum_rate);
+	adjustWeight(weights->output, adjustments->output, momentum->output, l_rate, momentum_rate);
 	
 	state = top;
 	top = NULL;
 	
-	deleteErrorOutput(errorOut);
-	errorOut = NULL;
+	deleteErrorList(errIn);
+	errIn = NULL;
 	
 	reset();
-	return out;
+	return errOut;
 }
 
-ErrorOutput* Layer::get_back_prop(ErrorOutput* errorOut){
+int Layer::get_back_prop(ErrorList* errOut, WeightBundle* weightErr, ErrorList* errIn){
 
 	// If at end of chain, generate blank weight errors to return
 	if (state->prev_state == NULL){
-		ErrorOutput* lErr = new ErrorOutput();
-		
-		lErr->last = NULL;
-		lErr->input_werr = create_empty_weights(output_size, input_size);
-		lErr->forget_werr = create_empty_weights(output_size, input_size);
-		lErr->activate_werr = create_empty_weights(output_size, input_size);
-		lErr->output_werr = create_empty_weights(output_size, input_size);
-		return lErr;
+		assert(state->prev_state == NULL &&
+			   errOut->last == NULL);
+		return 0;
 	}
 	
 	ErrorMatrix* error_input =  state->err_state->error_input;
@@ -297,19 +241,19 @@ ErrorOutput* Layer::get_back_prop(ErrorOutput* errorOut){
 	ErrorMatrix* error_output =  state->err_state->error_output;
 
 	
-	Matrix d_y = *errorOut->inputError +
-		input_w.output->dot(*error_input->output) +
-	    forget_w.output->dot(*error_forget->output) +
-	    output_w.output->dot(*error_output->output) +
-	    activate_w.output->dot(*error_activate->output);
+	Matrix d_y = *errIn->error+
+		weights->input->output->dot(*error_input->output) +
+	    weights->forget->output->dot(*error_forget->output) +
+	    weights->output->output->dot(*error_output->output) +
+	    weights->activate->output->dot(*error_activate->output);
 
 	Matrix d_o = d_y * memory->Mtanh();
 	Vector d_mem =
 		d_y * memory->MtanhDeriv() *  state->output_gateP->sigmoid() +
 		*state->err_state->forget_gate * *state->err_state->error_memory +
-		input_w.output->dot(*error_input->memory) +
-	    forget_w.output->dot(*error_forget->memory) +
-	    output_w.output->dot(d_o);
+		weights->input->output->dot(*error_input->memory) +
+	    weights->forget->output->dot(*error_forget->memory) +
+	    weights->output->output->dot(d_o);
 
 	Matrix d_f =
 		d_mem * *state->prev_state->memory *
@@ -327,54 +271,45 @@ ErrorOutput* Layer::get_back_prop(ErrorOutput* errorOut){
 	ErrorMatrix* err_in = new ErrorMatrix();
 	
 	err->error_input = err_in;
-	err_in->memory = new Matrix(input_w.memory->transpose().dot(d_i));
-	err_in->output = new Matrix(input_w.output->transpose().dot(d_i));
+	err_in->memory = new Matrix(weights->input->memory->transpose().dot(d_i));
+	err_in->output = new Matrix(weights->input->output->transpose().dot(d_i));
 	
 	ErrorMatrix* err_for = new ErrorMatrix();
 	err->error_forget = err_for;
-	err_for->memory = new Matrix(forget_w.memory->transpose().dot(d_f));
-	err_for->output = new Matrix(forget_w.output->transpose().dot(d_f));
+	err_for->memory = new Matrix(weights->forget->memory->transpose().dot(d_f));
+	err_for->output = new Matrix(weights->forget->output->transpose().dot(d_f));
 	
 	ErrorMatrix* err_act = new ErrorMatrix();
 	err->error_activate = err_act;
-	err_act->memory = new Matrix(activate_w.memory->transpose().dot(d_a));
-	err_act->output = new Matrix(activate_w.output->transpose().dot(d_a));
+	err_act->memory = new Matrix(weights->activate->memory->transpose().dot(d_a));
+	err_act->output = new Matrix(weights->activate->output->transpose().dot(d_a));
 
 	ErrorMatrix* err_out = new ErrorMatrix();
 	err->error_output = err_out;
-	err_out->memory = new Matrix(input_w.memory->transpose().dot(d_o));
-	err_out->output = new Matrix(input_w.output->transpose().dot(d_o));
+	err_out->memory = new Matrix(weights->input->memory->transpose().dot(d_o));
+	err_out->output = new Matrix(weights->input->output->transpose().dot(d_o));
 
 	err->forget_gate = new Matrix(state->forget_gateP->sigmoid());
     err->error_memory = new Matrix(d_mem);
 	state->prev_state->err_state = err;
 
+
+	ErrorList* err_o = new ErrorList();
+	errOut->last = err_o;
+    err_o->error =
+		new Matrix(weights->input->input->transpose().dot(d_i) +
+				   weights->forget->input->transpose().dot(d_f) +
+				   weights->activate->input->transpose().dot(d_a) +
+				   weights->output->input->transpose().dot(d_o));
 	
-	ErrorOutput* err_o = new ErrorOutput();
+	updateWeightErrors(weightErr->input, state, &d_i);
+	updateWeightErrors(weightErr->forget, state, &d_f);
+	updateWeightErrors(weightErr->activate, state, &d_a);
+	updateWeightErrors(weightErr->output, state, &d_o);
 	
-	State* cur_state = state;
 	state = state->prev_state;
-	// Recursive call
-	err_o->last = get_back_prop(errorOut->last);
-	state = cur_state;
 	
-    err_o->inputError =
-		new Matrix(input_w.input->transpose().dot(d_i) +
-				   forget_w.input->transpose().dot(d_f) +
-				   activate_w.input->transpose().dot(d_a) +
-				   output_w.input->transpose().dot(d_o));
-	// The problem is the state->prev_state->output doesn't the correct size
-	err_o->input_werr = createWeightErrors(state, &d_i,
-										   err_o->last->input_werr);
-	err_o->forget_werr = createWeightErrors(state, &d_f,
-											err_o->last->forget_werr);
-	err_o->activate_werr = createWeightErrors(state, &d_a,
-											  err_o->last->activate_werr);
-	err_o->output_werr = createWeightErrors(state, &d_o,
-											err_o->last->output_werr);
-	
-	
-	return err_o;
+	return get_back_prop(err_o, weightErr, errIn->last) + 1;
 }
 
 void Layer::reset(){

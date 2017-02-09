@@ -16,7 +16,7 @@ Network::Network(std::vector<int> layer_sizes, std::seed_seq seed){
 		l = new Layer(layer_sizes[i - 1], layer_sizes[i], gen);
 		layers[i-1] = l;
 	}
-	errOut = NULL; 
+	error = NULL; 
 }
 
 Network::~Network(){
@@ -35,18 +35,20 @@ std::vector<double> Network::forward_prop(std::vector<double>& input){
 }
 
 
-void Network::back_prop(std::vector<double>& error){
-	ErrorOutput* errO = new ErrorOutput();
-	errO->inputError = new Vector(error);
-	errO->last = errOut;
-	errOut = errO;
+void Network::back_prop(std::vector<double>& errorV){
+	ErrorList* errO = new ErrorList();
+	errO->error = new Vector(errorV);
+	errO->last = error;
+    error = errO;
 }
 
 void Network::apply_error(double learning_rate){
+	ErrorList* errIn = error;
+	error = NULL;
 	for(int i = layers.size() - 1; i >= 0; i--){
-		errOut = layers[i]->back_prop(errOut, learning_rate);
+		errIn = layers[i]->back_prop(errIn, learning_rate);
+
 	}
-	errOut = NULL;
 }
 
 void Network::write_to_json(std::ostream& os){
@@ -62,7 +64,6 @@ void Network::write_to_json(std::ostream& os){
 }
 
 void Network::reset(){
-	
 	for(unsigned int i = 0; i < layers.size(); i++){
 		layers[i]->reset();
 	}

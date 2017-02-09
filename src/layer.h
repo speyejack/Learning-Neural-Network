@@ -2,26 +2,23 @@
 #define LAYER_HEADER_INCLUDED
 #include "matrix.h"
 #include "vector.h"
+#include "weights.h"
 #include <random>
 #include <ostream>
 
-// Struct to hold each weight matrix
-typedef struct Weights{
-	Matrix* input;
-	Matrix* output;
-	Matrix* memory;
-	Matrix* bias;
-} Weights;
-
 // Struct to return from backprop
+// Removing this out of redundency
+/*
 typedef struct ErrorOutput{ 
 	ErrorOutput* last;
 	Matrix* inputError;
-    Weights* input_werr;
-	Weights* forget_werr;
-    Weights* activate_werr;
-	Weights* output_werr;
+	WeightBundle* error;
 } ErrorOutput;
+*/
+typedef struct ErrorList{
+    ErrorList* last;
+	Matrix* error;
+} ErrorList;
 
 // Allows error to be held in errorState
 typedef struct ErrorMatrix{
@@ -29,10 +26,11 @@ typedef struct ErrorMatrix{
 	Matrix* memory;
 } ErrorMatrix;
 
-
 // Holds Error from next timestep (prev in backprop)
 typedef struct ErrorState {
+	WeightBundle* last_error;
 	// From the next time step
+	// Clean up this stuff for weight bundle instead
 	ErrorMatrix* error_input;
 	ErrorMatrix* error_forget;
 	ErrorMatrix* error_activate;
@@ -59,24 +57,16 @@ class Layer {
  private:
 	int input_size;
 	int output_size;
-	
-	Weights forget_w;
-    Weights activate_w;
-    Weights input_w;
-	Weights output_w;
-	
-	Weights forget_wm;
-    Weights activate_wm;
-    Weights input_wm;
-	Weights output_wm;
+
+	WeightBundle* weights;
+	WeightBundle* momentum;
 	
 	Vector* memory;
 	State* state;
 	
 	void delete_state();
-	void delete_weights(Weights w);
-	ErrorOutput* get_back_prop(ErrorOutput* error);
-	Weights applyWeightError(Weights, Weights*, Weights*, double, double);
+    int get_back_prop(ErrorList*, WeightBundle*, ErrorList* errIn);
+	Weight applyWeightError(Weight, Weight*, Weight*, double, double);
 	
  public:
 	
@@ -84,10 +74,9 @@ class Layer {
 	~Layer();
 	int get_input_size(){return input_size;};
 	int get_output_size(){return output_size;};
-
 	
 	Vector forward_prop(Vector& input);
-	ErrorOutput* back_prop(ErrorOutput* error, double learning_rate);
+	ErrorList* back_prop(ErrorList* errIn, double learning_rate);
 	void reset();
 	void write_to_json(std::ostream&);
 };
