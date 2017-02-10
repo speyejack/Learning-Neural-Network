@@ -7,14 +7,6 @@
 #include <ostream>
 
 // Struct to return from backprop
-// Removing this out of redundency
-/*
-typedef struct ErrorOutput{ 
-	ErrorOutput* last;
-	Matrix* inputError;
-	WeightBundle* error;
-} ErrorOutput;
-*/
 typedef struct ErrorList{
     ErrorList* last;
 	Matrix* error;
@@ -82,4 +74,6 @@ class Layer {
 };
 
 std::ostream& operator<<(std::ostream&, Layer&);
+// Maybe move to it's own header file?
+void deleteErrorList(ErrorList* list);
 #endif

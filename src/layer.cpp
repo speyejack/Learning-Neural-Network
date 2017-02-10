@@ -218,7 +218,8 @@ ErrorList* Layer::back_prop(ErrorList* errIn, double learning_rate){
 	adjustWeight(weights->forget, adjustments->forget, momentum->forget, l_rate, momentum_rate);
 	adjustWeight(weights->activate, adjustments->activate, momentum->activate, l_rate, momentum_rate);
 	adjustWeight(weights->output, adjustments->output, momentum->output, l_rate, momentum_rate);
-	
+
+	deleteWeightBundle(adjustments);
 	state = top;
 	top = NULL;
 	

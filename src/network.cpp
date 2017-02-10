@@ -47,8 +47,8 @@ void Network::apply_error(double learning_rate){
 	error = NULL;
 	for(int i = layers.size() - 1; i >= 0; i--){
 		errIn = layers[i]->back_prop(errIn, learning_rate);
-
 	}
+	deleteErrorList(errIn);
 }
 
 void Network::write_to_json(std::ostream& os){
