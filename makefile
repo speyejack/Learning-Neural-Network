@@ -41,6 +41,10 @@ debug: clean
 	$(CC) $(SOURCES) -o $(BINARY) $(CFLAGS) $(LDFLAGS) -ggdb
 	gdb ./$(BINARY)
 
+memCheck: clean
+	$(CC) $(SOURCES) -o $(BINARY) $(CFLAGS) $(LDFLAGS) -ggdb
+	valgrind --tool=memcheck --leak-check=full ./$(BINARY)
+
 optimize: clean 
 	$(CC) $(CFLAGS) $(LDFLAGS) $(SOURCES) -o $(BINARY) $(OPTFLAG)
 
