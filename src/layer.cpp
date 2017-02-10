@@ -57,6 +57,7 @@ void deleteErrorList(ErrorList* list){
 	if (list == NULL)
 		return;
     ErrorList* next = list->last;
+	delete list->error;
 	delete list;
 	deleteErrorList(next);
 }
@@ -168,6 +169,8 @@ Vector Layer::forward_prop(Vector& input){
 	Matrix activation_g = activation_g_p.Mtanh();
 	
 	Matrix new_mem = forget_g * *memory + input_g * activation_g;
+	
+	delete memory;
 	memory = new Vector(new_mem);
 	Vector activated_mem = memory->Mtanh();
 	
