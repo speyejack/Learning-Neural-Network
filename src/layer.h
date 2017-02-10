@@ -53,7 +53,6 @@ class Layer {
 	WeightBundle* weights;
 	WeightBundle* momentum;
 	
-	Vector* memory;
 	State* state;
 	
 	void delete_state();

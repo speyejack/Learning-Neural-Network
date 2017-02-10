@@ -117,7 +117,6 @@ Layer::~Layer(){
 	state = NULL;
 	deleteWeightBundle(weights);
 	deleteWeightBundle(momentum);
-	delete memory;
 }
 
 Layer::Layer(int input_size, int output_size, std::default_random_engine& gen){
@@ -128,7 +127,6 @@ Layer::Layer(int input_size, int output_size, std::default_random_engine& gen){
 	momentum = createWeightBundle(input_size, output_size);
 	fillBundle(weights, gen, 0, 0.1);
 	
-	memory = new Vector(output_size);
 	state = NULL;
 	reset();
 }
@@ -145,6 +143,8 @@ Matrix getPrimitiveGate(Weight* weight, Vector* input, Vector* memory, Vector* o
 Vector Layer::forward_prop(Vector& input){
 	assert(input.get_height() == input_size);
 
+	Vector* memory = state->memory;
+	
 	State* prev_state = state;
 	
     state = new State();
@@ -170,7 +170,6 @@ Vector Layer::forward_prop(Vector& input){
 	
 	Matrix new_mem = forget_g * *memory + input_g * activation_g;
 	
-	delete memory;
 	memory = new Vector(new_mem);
 	Vector activated_mem = memory->Mtanh();
 	
@@ -190,6 +189,7 @@ Vector Layer::forward_prop(Vector& input){
 	state->activation_gateP = new Matrix(activation_g_p);
 	state->output_gateP = new Matrix(output_g_p);
 	state->err_state = NULL;
+	delete memory;
 	
 	return output;
 }
@@ -251,9 +251,9 @@ int Layer::get_back_prop(ErrorList* errOut, WeightBundle* weightErr, ErrorList* 
 	    weights->output->output->dot(*error_output->output) +
 	    weights->activate->output->dot(*error_activate->output);
 
-	Matrix d_o = d_y * memory->Mtanh();
+	Matrix d_o = d_y * state->memory->Mtanh();
 	Vector d_mem =
-		d_y * memory->MtanhDeriv() *  state->output_gateP->sigmoid() +
+		d_y * state->memory->MtanhDeriv() *  state->output_gateP->sigmoid() +
 		*state->err_state->forget_gate * *state->err_state->error_memory +
 		weights->input->output->dot(*error_input->memory) +
 	    weights->forget->output->dot(*error_forget->memory) +
