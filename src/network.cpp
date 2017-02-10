@@ -23,6 +23,7 @@ Network::~Network(){
 	for (unsigned int i = 0; i < layers.size(); i++){
 		delete layers[i];
 	}
+	deleteErrorList(error);
 }
 
 std::vector<double> Network::forward_prop(std::vector<double>& input){
