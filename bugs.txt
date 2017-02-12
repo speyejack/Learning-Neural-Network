@@ -1,4 +1,20 @@
 BUG:
 -If you set a training batch size = 10000, it will get a seg fault.
 
-- Currently after running network it converges to answers being NAN
+- Currently after running network it converges to answers being NAN or weights quickly increase in size.
+can be reproduced w/
+gate = ||
+seed = 1486755178
+batch size = 1000
+step size = 0.1
+for = 1000 times
+happens around 570
+
+or...
+
+gate = ||
+seed = 1486755178
+batch size = 10
+step size = 0.1
+for = 100,000 times
+happens in 2000 range 

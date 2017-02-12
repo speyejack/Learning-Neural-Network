@@ -4,6 +4,8 @@
 #include "weights.h"
 #include <assert.h>
 #include <ostream>
+// Remember to remove this after debugging...
+#include <math.h>
 
 void updateWeightErrors(Weight* matErr, State* state, Matrix* error){
 	Vector bias(1);
@@ -205,10 +207,9 @@ ErrorList* Layer::back_prop(ErrorList* errIn, double learning_rate){
 	errS->error_memory = new Vector(this->output_size);
 	errS->forget_gate = new Matrix(state->forget_gateP->sigmoid());
 	state->err_state = errS;
-	
+
 	ErrorList* errOut = new ErrorList();
 	WeightBundle* adjustments = createWeightBundle(input_size, output_size);
-	
 	int counter = get_back_prop(errOut, adjustments, errIn);
 
 	double l_rate = learning_rate / counter;
@@ -272,8 +273,8 @@ int Layer::get_back_prop(ErrorList* errOut, WeightBundle* weightErr, ErrorList* 
 	
 	
 	ErrorState* err = new ErrorState();
-	ErrorMatrix* err_in = new ErrorMatrix();
 	
+	ErrorMatrix* err_in = new ErrorMatrix();
 	err->error_input = err_in;
 	err_in->memory = new Matrix(weights->input->memory->transpose().dot(d_i));
 	err_in->output = new Matrix(weights->input->output->transpose().dot(d_i));
@@ -305,11 +306,17 @@ int Layer::get_back_prop(ErrorList* errOut, WeightBundle* weightErr, ErrorList* 
 				   weights->forget->input->transpose().dot(d_f) +
 				   weights->activate->input->transpose().dot(d_a) +
 				   weights->output->input->transpose().dot(d_o));
-	
+
+	double prev_outin = weightErr->output->input->get_value(0,0);
 	updateWeightErrors(weightErr->input, state, &d_i);
 	updateWeightErrors(weightErr->forget, state, &d_f);
 	updateWeightErrors(weightErr->activate, state, &d_a);
 	updateWeightErrors(weightErr->output, state, &d_o);
+	double outin = weightErr->output->input->get_value(0,0);
+	// Remember to remove math.h
+	if (fabs(outin - prev_outin) > 1000){
+		printf("Diff of outin = %f\n", fabs(outin - prev_outin)); 
+	}
 	
 	state = state->prev_state;
 	

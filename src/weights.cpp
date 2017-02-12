@@ -1,3 +1,4 @@
+#include <iostream>
 #include "weights.h"
 #include "matrix.h"
 // Struct to hold each weight matrix
@@ -71,3 +72,22 @@ void replaceWeight(Weight* old_w, Weight* new_w){
 	old_w->output = new Matrix(*new_w->output);
 	old_w->bias = new Matrix(*new_w->bias);
 }
+
+void printWeight(Weight* weight){
+	std::cout << "input->" << *weight->input << std::endl;
+	std::cout << "memory->" << *weight->memory << std::endl;
+	std::cout << "output->" << *weight->output << std::endl;
+	std::cout << "bias->" << *weight->bias << std::endl;
+}
+
+void printBundle(WeightBundle* bundle){
+	std::cout << "b_input" << std::endl;
+	printWeight(bundle->input);
+	std::cout << "b_forget" << std::endl;
+	printWeight(bundle->forget);
+	std::cout << "b_activate" << std::endl;
+	printWeight(bundle->activate);
+	std::cout << "b_output" << std::endl;
+	printWeight(bundle->output);
+}
+

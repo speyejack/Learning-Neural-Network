@@ -13,11 +13,11 @@ int main(){
 	seed = 1486755178;
 	Network net(layers, {seed});
 	
-	GateTrainer t(&net, 1000, 0.1,
+	GateTrainer t(&net, 10, 0.1,
 				  [](bool input1, bool input2) -> bool {
 					  return input1 || input2;
 				  });
-	for( int i = 0; i < 1000; i++){
+	for( int i = 0; i < 100000; i++){
 		t.train();
 		printf("Sampling... Iter:%d\n", i);
 		// 10th run breaks
@@ -28,8 +28,8 @@ int main(){
 			nantest = nantest || std::isnan(sample);
 			zerotest = zerotest && !sample; 
 			printf("%d && %d = %d : %.3f\n", j/2 , j%2, sample > 0.5, sample);
-		}
 		
+		}	
 		if (nantest || zerotest){
 			printf("Found nan or all zeros in sampling, exiting.\n");
 			exit(1);
