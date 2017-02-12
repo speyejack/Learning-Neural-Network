@@ -1,6 +1,32 @@
 #include <vector>
 #include <assert.h>
+#include <math.h>
 #include "matrix.h"
+
+static inline double safeAdd(double a, double b){
+	double c = a + b;
+	if (std::isinf(c)){
+		c = 0;
+	}
+	return c;
+}
+
+static inline double safeSub(double a, double b){
+	double c = a - b;
+	if (std::isinf(c)){
+		c = 0;
+	}
+	return c;
+}
+	
+
+static inline double safeMult(double a, double b){
+	double c = a * b;
+	if (std::isinf(c)){
+		c = 0;
+	}
+	return c;
+}
 
 Matrix::Matrix() : height(0), width(0){
 	matrix.resize(height * width);
@@ -44,7 +70,7 @@ Matrix Matrix::operator+(const Matrix &o){
 	assert(this->get_size() == (int) o.matrix.size() && this->height == o.height);
 	Matrix out(height, width);
 	for (int i = 0; i < get_size(); i++){
-		out.matrix[i] = matrix[i] + o.matrix[i];
+		out.matrix[i] = safeAdd(matrix[i], o.matrix[i]);
 	}
 	return out;
 }
@@ -53,7 +79,7 @@ Matrix Matrix::operator*(const Matrix &o){
 	assert(this->get_size() == (int) o.matrix.size() && this->height == o.height);
 	Matrix out(height, width);
 	for (int i = 0; i < get_size(); i++){
-		out.matrix[i] = matrix[i] * o.matrix[i];
+		out.matrix[i] = safeMult(matrix[i], o.matrix[i]);
 	}
 	return out;
 }
@@ -61,7 +87,7 @@ Matrix Matrix::operator*(const Matrix &o){
 Matrix Matrix::operator+(double scalar){
 	Matrix out(height, width);
 	for (int i = 0; i < get_size(); i++){
-		out.matrix[i] = matrix[i] + scalar;
+		out.matrix[i] = safeAdd(matrix[i], scalar);
 	}
 	return out;
 }
@@ -69,7 +95,7 @@ Matrix Matrix::operator+(double scalar){
 Matrix Matrix::operator*(double scalar){
 	Matrix out(height, width);
 	for (int i = 0; i < get_size(); i++){
-		out.matrix[i] = matrix[i] * scalar; 
+		out.matrix[i] = safeMult(matrix[i], scalar); 
 	}
 	return out;
 }
@@ -85,7 +111,7 @@ Matrix Matrix::operator-(const Matrix &o){
 	assert(this->get_size() == (int) o.matrix.size() && this->height == o.height);
 	Matrix out(height, width);
 	for (int i = 0; i < get_size(); i++)
-		out.matrix[i] = matrix[i] - o.matrix[i];
+		out.matrix[i] = safeSub(matrix[i], o.matrix[i]);
 	return out;
 }
 
@@ -108,8 +134,11 @@ Matrix Matrix::dot(Matrix o){
 			double dot = 0;
 			for (int element = 0; element < this->width; element++){
 
-				dot += this->get_value(element, row) * o.get_value(col, element);
+				dot += safeMult(this->get_value(element, row), o.get_value(col, element));
 				
+			}
+			if (std::isinf(dot)){
+				dot = 0;
 			}
 			out.set_value(col, row, dot);
 			
