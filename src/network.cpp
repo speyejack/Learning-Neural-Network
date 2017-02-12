@@ -47,13 +47,6 @@ void Network::apply_error(double learning_rate){
 	ErrorList* errIn = error;
 	error = NULL;
 	for(int i = layers.size() - 1; i >= 0; i--){
-	    int count = 0;
-		ErrorList* index = errIn;
-		while (index != NULL){
-			count++;
-			index = index->last;
-		}
-		printf("Count = %d\n", count);
 		errIn = layers[i]->back_prop(errIn, learning_rate);
 	}
 	deleteErrorList(errIn);

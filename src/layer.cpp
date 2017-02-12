@@ -212,6 +212,10 @@ ErrorList* Layer::back_prop(ErrorList* errIn, double learning_rate){
 	WeightBundle* adjustments = createWeightBundle(input_size, output_size);
 	int counter = get_back_prop(errOut, adjustments, errIn);
 
+	ErrorList* topErr = errOut;
+	errOut = errOut->last;
+	delete topErr;
+
 	double l_rate = learning_rate / counter;
 	double momentum_rate = 0.5;
 	
