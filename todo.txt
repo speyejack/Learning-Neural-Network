@@ -1,3 +1,7 @@
+Top priority:
+Create Tests
+Refactor Code
+
 Needs Implementing:
 Add momentum to training
 Add self adjusting learning rate
