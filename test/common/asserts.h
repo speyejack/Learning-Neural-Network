@@ -5,6 +5,5 @@
 void assertTrue(std::string message, bool condition);
 void assertFalse(std::string message, bool condition);
 void fail(std::string message);
-void warn(std::string message);
 
 #endif
