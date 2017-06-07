@@ -13,6 +13,7 @@ void runAllMatrixTests(){
 	testMatrixGetWidth();
 	testMatrixGetValue();
 	testMatrixSetValue();
+	testMatrixGeneration();
 	printf("PASSED: Matrix Tests\n");
 }
 
@@ -32,6 +33,34 @@ Matrix generateAMatrix(){
 		}
 	}
 	return a;
+}
+
+void testMatrixGeneration(){
+	/*Matrix a = generateMatrix([[1,2],
+							   [3,4],
+							   [5,6]],
+							  3, 2);
+	Matrix b = generateAMatrix();
+	assertTrue("Generated matrices not the same", compareMatrixEqual(a,b));
+	*/
+}
+
+Matrix generateMatrix(int** arrayMatrix, int height, int width){
+	Matrix matrix = Matrix(height, width);
+	setMatrix(matrix, arrayMatrix, height, width);
+	return matrix;
+}
+
+void setMatrix(Matrix& matrix, int** arrayMatrix, int height, int width){
+	for (int row = 0; row < height; row++){
+		setRow(matrix, arrayMatrix[row], row, width);
+	}
+}
+
+void setRow(Matrix& matrix, int* arrayRow, int row, int width){
+	for (int col = 0; col < width; col++){
+		matrix.set_value(col, row, arrayRow[col]);
+	}
 }
 
 Matrix generateBMatrix(){
@@ -86,4 +115,6 @@ void testMatrixSetValue(){
 	assertTrue("Matrix Set Value didn't get value of 7 back", a.get_value(0,0) == new_value);
 }
 
-void testMatrix
+void testMatrixTranspose(){
+	
+}
