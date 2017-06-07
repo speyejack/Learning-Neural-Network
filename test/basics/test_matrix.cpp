@@ -9,6 +9,10 @@ int main(){
 
 void runAllMatrixTests(){
 	testCompareMatrixEqual();
+	testMatrixGetHeight();
+	testMatrixGetWidth();
+	testMatrixGetValue();
+	testMatrixSetValue();
 	printf("PASSED: Matrix Tests\n");
 }
 
@@ -60,3 +64,26 @@ bool compareMatrixValuesEqual(Matrix& a, Matrix& b){
 	return true;
 }
 
+void testMatrixGetHeight(){
+	Matrix a = Matrix(5,2);
+	assertTrue("Matrix Get Height didn't return expect value of 5", a.get_height() == 5);
+}
+
+void testMatrixGetWidth(){
+	Matrix a = Matrix(5,2);
+	assertTrue("Matrix Get Height didn't return expect value of 2", a.get_width() == 2);
+}
+
+void testMatrixGetValue(){
+	Matrix a = Matrix(1,1);
+	assertTrue("Matrix Get Value didn't get value of 0 back", a.get_value(0,0) == 0);
+}
+
+void testMatrixSetValue(){
+	Matrix a = Matrix(1,1);
+	int new_value = 7;
+	a.set_value(0,0,new_value);
+	assertTrue("Matrix Set Value didn't get value of 7 back", a.get_value(0,0) == new_value);
+}
+
+void testMatrix
