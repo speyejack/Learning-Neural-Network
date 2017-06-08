@@ -18,7 +18,9 @@ void runAllMatrixTests(){
 	testMatrixClear();
 	testMatrixDot();
 	testMatrixScalarAddition();
+	testMatrixMatrixAddition();
 	testMatrixScalarMultiplication();
+	testMatrixMatrixMultiplication();
 	printf("PASSED: Matrix Tests\n");
 }
 
@@ -185,6 +187,43 @@ void testMatrixScalarMultiplication(){
 	Matrix resultMatrix = generateMatrix(result, 2, 3);
 
 	Matrix bMatrix = aMatrix * 2;
-	assertTrue("Matrix scalar addition failed", compareMatrixEqual(bMatrix, resultMatrix));
+	assertTrue("Matrix scalar multiplication failed", compareMatrixEqual(bMatrix, resultMatrix));
 }
 	
+void testMatrixMatrixAddition(){
+	int a[] = {8, 4,
+			   9, 2};
+	
+	int b[] = {2, 9,
+			   9, 1};
+
+	int result[] = {10, 13,
+					18, 3};
+
+	Matrix aMatrix = generateMatrix(a, 2, 2);
+	Matrix bMatrix = generateMatrix(b, 2, 2);
+	Matrix resultMatrix = generateMatrix(result, 2, 2);
+	
+	Matrix cMatrix = aMatrix + bMatrix;
+	assertTrue("Matrix matrix addition failed", compareMatrixEqual(cMatrix, resultMatrix));
+
+}
+
+void testMatrixMatrixMultiplication(){
+	int a[] = {8, 4,
+			   9, 2};
+	
+	int b[] = {2, 9,
+			   9, 1};
+
+	int result[] = {16, 36,
+					81, 2};
+
+	Matrix aMatrix = generateMatrix(a, 2, 2);
+	Matrix bMatrix = generateMatrix(b, 2, 2);
+	Matrix resultMatrix = generateMatrix(result, 2, 2);
+	
+	Matrix cMatrix = aMatrix * bMatrix;
+	assertTrue("Matrix matrix multplication failed", compareMatrixEqual(cMatrix, resultMatrix));
+
+}
