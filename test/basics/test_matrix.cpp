@@ -18,10 +18,16 @@ void runAllMatrixTests(){
 }
 
 void testCompareMatrixEqual(){
-	Matrix a = generateAMatrix();
-	Matrix b = generateBMatrix();
-	assertTrue("compareMatrixEqual found same matrix not equal", compareMatrixEqual(a,a));
-	assertFalse("compareMatrixEqual found different matrices equal", compareMatrixEqual(a,b));
+	int a[] = {0,1,
+			   2,3,
+			   4,5};
+	int b[] = {5,8,
+			   2,2,
+			   3,9};
+	Matrix aM = generateMatrix(a, 3, 2);
+	Matrix bM = generateMatrix(b, 3, 2);
+	assertTrue("compareMatrixEqual found same matrix not equal", compareMatrixEqual(aM,aM));
+	assertFalse("compareMatrixEqual found different matrices equal", compareMatrixEqual(aM,bM));
 }
 
 Matrix generateAMatrix(){
@@ -36,24 +42,23 @@ Matrix generateAMatrix(){
 }
 
 void testMatrixGeneration(){
-	/*Matrix a = generateMatrix([[1,2],
-							   [3,4],
-							   [5,6]],
-							  3, 2);
+	int mat[] = {0,1,
+				 2,3,
+				 4,5};
+	Matrix a = generateMatrix(&mat[0], 3, 2);
 	Matrix b = generateAMatrix();
 	assertTrue("Generated matrices not the same", compareMatrixEqual(a,b));
-	*/
 }
 
-Matrix generateMatrix(int** arrayMatrix, int height, int width){
+Matrix generateMatrix(int* arrayMatrix, int height, int width){
 	Matrix matrix = Matrix(height, width);
 	setMatrix(matrix, arrayMatrix, height, width);
 	return matrix;
 }
 
-void setMatrix(Matrix& matrix, int** arrayMatrix, int height, int width){
+void setMatrix(Matrix& matrix, int* arrayMatrix, int height, int width){
 	for (int row = 0; row < height; row++){
-		setRow(matrix, arrayMatrix[row], row, width);
+		setRow(matrix, &arrayMatrix[width * row], row, width);
 	}
 }
 
@@ -61,17 +66,6 @@ void setRow(Matrix& matrix, int* arrayRow, int row, int width){
 	for (int col = 0; col < width; col++){
 		matrix.set_value(col, row, arrayRow[col]);
 	}
-}
-
-Matrix generateBMatrix(){
-	Matrix b(1,3);
-	int counter = 0;
-	for (int i = 0; i < b.get_height(); i++){
-		for (int j = 0; j < b.get_width(); j++){
-			b.set_value(j, i, counter++);
-		}
-	}
-	return b;
 }
 
 bool compareMatrixEqual(Matrix& a, Matrix& b){
@@ -116,5 +110,18 @@ void testMatrixSetValue(){
 }
 
 void testMatrixTranspose(){
+	int mat[] = {3, 5, 3,
+				 3, 5, 3,
+				 3, 5, 3,
+				 3, 5, 3};
+	
+	int trans[] = {3, 3, 3, 3,
+				   5, 5, 5, 5,
+				   3, 3, 3, 3};
+
+	Matrix a = generateMatrix(mat, 4, 3);
+	Matrix b = generateMatrix(trans, 3, 4);
+	Matrix transMat = a.transpose();
+	assertTrue("Matrix Transposing failed", compareMatrixEqual(transMat,b));
 	
 }
