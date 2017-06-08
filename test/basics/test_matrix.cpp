@@ -16,6 +16,7 @@ void runAllMatrixTests(){
 	testMatrixGeneration();
 	testMatrixTranspose();
 	testMatrixClear();
+	testMatrixDot();
 	printf("PASSED: Matrix Tests\n");
 }
 
@@ -139,4 +140,21 @@ void testMatrixClear(){
 	Matrix matM = generateMatrix(mat, 3, 2);
 	Matrix clearM = generateMatrix(mat, 3, 2);
 	assertTrue("Matrix clear failed", compareMatrixEqual(matM, clearM));
+}
+
+void testMatrixDot(){
+	int a[] = {5, 9, 2,
+			   1, 4, 2};
+	
+	int b[] = {8, 5, 1,
+			   2, 9, 2,
+			   3, 4, 7};
+
+	int result[] = {64, 114, 37,
+			   22, 49, 23};
+	Matrix aM = generateMatrix(a, 2, 3);
+	Matrix bM = generateMatrix(b, 3, 3);
+	Matrix resultM = generateMatrix(result, 2, 3);
+	Matrix dot = aM.dot(bM);
+	assertTrue("Matrix dot product failed", compareMatrixEqual(dot, resultM));
 }
