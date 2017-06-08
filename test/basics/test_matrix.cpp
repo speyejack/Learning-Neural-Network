@@ -14,6 +14,8 @@ void runAllMatrixTests(){
 	testMatrixGetValue();
 	testMatrixSetValue();
 	testMatrixGeneration();
+	testMatrixTranspose();
+	testMatrixClear();
 	printf("PASSED: Matrix Tests\n");
 }
 
@@ -123,5 +125,18 @@ void testMatrixTranspose(){
 	Matrix b = generateMatrix(trans, 3, 4);
 	Matrix transMat = a.transpose();
 	assertTrue("Matrix Transposing failed", compareMatrixEqual(transMat,b));
+}
+
+void testMatrixClear(){
+	int mat[] = {4, 0,
+				 9, 2,
+				 2, 5};
 	
+	int clear[] = {0, 0,
+				   0, 0,
+				   0, 0};
+
+	Matrix matM = generateMatrix(mat, 3, 2);
+	Matrix clearM = generateMatrix(mat, 3, 2);
+	assertTrue("Matrix clear failed", compareMatrixEqual(matM, clearM));
 }
