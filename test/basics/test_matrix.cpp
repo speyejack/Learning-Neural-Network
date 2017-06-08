@@ -17,6 +17,8 @@ void runAllMatrixTests(){
 	testMatrixTranspose();
 	testMatrixClear();
 	testMatrixDot();
+	testMatrixScalarAddition();
+	testMatrixScalarMultiplication();
 	printf("PASSED: Matrix Tests\n");
 }
 
@@ -27,10 +29,10 @@ void testCompareMatrixEqual(){
 	int b[] = {5,8,
 			   2,2,
 			   3,9};
-	Matrix aM = generateMatrix(a, 3, 2);
-	Matrix bM = generateMatrix(b, 3, 2);
-	assertTrue("compareMatrixEqual found same matrix not equal", compareMatrixEqual(aM,aM));
-	assertFalse("compareMatrixEqual found different matrices equal", compareMatrixEqual(aM,bM));
+	Matrix aMatrix = generateMatrix(a, 3, 2);
+	Matrix bMatrix = generateMatrix(b, 3, 2);
+	assertTrue("compareMatrixEqual found same matrix not equal", compareMatrixEqual(aMatrix, aMatrix));
+	assertFalse("compareMatrixEqual found different matrices equal", compareMatrixEqual(aMatrix, bMatrix));
 }
 
 Matrix generateAMatrix(){
@@ -129,17 +131,19 @@ void testMatrixTranspose(){
 }
 
 void testMatrixClear(){
-	int mat[] = {4, 0,
+	int a[] = {4, 0,
 				 9, 2,
 				 2, 5};
 	
-	int clear[] = {0, 0,
-				   0, 0,
-				   0, 0};
+	int result[] = {0, 0,
+					0, 0,
+					0, 0};
 
-	Matrix matM = generateMatrix(mat, 3, 2);
-	Matrix clearM = generateMatrix(mat, 3, 2);
-	assertTrue("Matrix clear failed", compareMatrixEqual(matM, clearM));
+	Matrix aMatrix = generateMatrix(a, 3, 2);
+	Matrix resultMatrix = generateMatrix(result, 3, 2);
+
+	aMatrix.clear_matrix();
+	assertTrue("Matrix clear failed", compareMatrixEqual(aMatrix, resultMatrix));
 }
 
 void testMatrixDot(){
@@ -152,9 +156,35 @@ void testMatrixDot(){
 
 	int result[] = {64, 114, 37,
 			   22, 49, 23};
-	Matrix aM = generateMatrix(a, 2, 3);
-	Matrix bM = generateMatrix(b, 3, 3);
-	Matrix resultM = generateMatrix(result, 2, 3);
-	Matrix dot = aM.dot(bM);
-	assertTrue("Matrix dot product failed", compareMatrixEqual(dot, resultM));
+	Matrix aMatrix = generateMatrix(a, 2, 3);
+	Matrix bMatrix = generateMatrix(b, 3, 3);
+	Matrix resultMatrix = generateMatrix(result, 2, 3);
+	Matrix dot = aMatrix.dot(bMatrix);
+	assertTrue("Matrix dot product failed", compareMatrixEqual(dot, resultMatrix));
 }
+
+void testMatrixScalarAddition(){
+	int a[] = {3, 8, 1,
+			   9, 5, 0};
+	int result[] = {5, 10, 3,
+					11, 7, 2};
+	Matrix aMatrix = generateMatrix(a, 2, 3);
+	Matrix resultMatrix = generateMatrix(result, 2, 3);
+
+	Matrix bMatrix = aMatrix + 2;
+	assertTrue("Matrix scalar addition failed", compareMatrixEqual(bMatrix, resultMatrix));
+}
+	
+void testMatrixScalarMultiplication(){
+	int a[] = {3, 8, 1,
+			   9, 5, 0};
+
+	int result[] = {6, 16, 2,
+					18, 10, 0};
+	Matrix aMatrix = generateMatrix(a, 2, 3);
+	Matrix resultMatrix = generateMatrix(result, 2, 3);
+
+	Matrix bMatrix = aMatrix * 2;
+	assertTrue("Matrix scalar addition failed", compareMatrixEqual(bMatrix, resultMatrix));
+}
+	
