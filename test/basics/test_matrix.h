@@ -11,6 +11,7 @@ void testMatrixClear();
 void testMatrixDot();
 void testMatrixScalarAddition();
 void testMatrixMatrixAddition();
+void testMatrixMatrixSubtraction();
 void testMatrixScalarMultiplication();
 void testMatrixMatrixMultiplication();
 Matrix generateMatrix(int* arrayMatrix, int height, int width);
