@@ -24,6 +24,7 @@ void runAllMatrixTests(){
 	testMatrixMatrixMultiplication();
 	testMatrixMatrixInPlaceAddition();
 	testMatrixMatrixInPlaceSubtraction();
+	testMatrixAssignment();
 	printf("PASSED: Matrix Tests\n");
 }
 
@@ -280,5 +281,15 @@ void testMatrixMatrixInPlaceSubtraction(){
 	Matrix resultMatrix = generateMatrix(result, 2, 2);
 	
 	aMatrix -= bMatrix;
+	assertTrue("Matrix matrix subtraction failed", compareMatrixEqual(aMatrix, resultMatrix));
+}
+
+void testMatrixAssignment(){
+	int a[] = {8, 4,
+			   9, 2};
+
+	Matrix aMatrix = generateMatrix(a, 2, 2);
+	Matrix resultMatrix = aMatrix;
+	
 	assertTrue("Matrix matrix subtraction failed", compareMatrixEqual(aMatrix, resultMatrix));
 }

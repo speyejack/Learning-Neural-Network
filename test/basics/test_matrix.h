@@ -16,6 +16,7 @@ void testMatrixScalarMultiplication();
 void testMatrixMatrixMultiplication();
 void testMatrixMatrixInPlaceAddition();
 void testMatrixMatrixInPlaceSubtraction();
+void testMatrixAssignment();
 Matrix generateMatrix(int* arrayMatrix, int height, int width);
 void setMatrix(Matrix& matrix, int* arrayMatrix, int height, int width);
 void setRow(Matrix& matrix, int* arrayRow, int row, int width);
