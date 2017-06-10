@@ -28,6 +28,10 @@ clean:
 	rm -f *~
 	rm -f *.stackdump
 	rm -f *#
+	rm -f *.gcov
+	rm -f *.gcda
+	rm -f *.gcno
+	rm -f a.out
 
 clear :
 	clear
@@ -50,3 +54,4 @@ optimize: clean
 
 reoptimize: clean optimize
 	./$(BINARY)
+
