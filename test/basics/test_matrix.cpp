@@ -41,24 +41,17 @@ void testCompareMatrixEqual(){
 	assertFalse("compareMatrixEqual found different matrices equal", compareMatrixEqual(aMatrix, bMatrix));
 }
 
-Matrix generateAMatrix(){
-	Matrix a(3,2);
-	int counter = 0;
-	for (int i = 0; i < a.get_height(); i++){
-		for (int j = 0; j < a.get_width(); j++){
-			a.set_value(j, i, counter++);
-		}
-	}
-	return a;
-}
-
 void testMatrixGeneration(){
-	int mat[] = {0,1,
-				 2,3,
-				 4,5};
-	Matrix a = generateMatrix(&mat[0], 3, 2);
-	Matrix b = generateAMatrix();
-	assertTrue("Generated matrices not the same", compareMatrixEqual(a,b));
+	int a[] = {0,1,
+			   2,3,
+			   4,5};
+	int b[] = {0,1,2,
+			   3,4,5};
+	Matrix aMatrix = generateMatrix(a, 3, 2);
+	Matrix cMatrix = generateMatrix(a, 3, 2);
+	Matrix bMatrix = generateMatrix(b, 2, 3);
+	assertTrue("Generated same matrices not the same", compareMatrixEqual(a,c));
+	assertFalse("Generated different matrices the same", compareMatrixEqual(a,b));
 }
 
 Matrix generateMatrix(int* arrayMatrix, int height, int width){
