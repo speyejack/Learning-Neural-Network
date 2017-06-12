@@ -1,5 +1,6 @@
 #include "network.h"
 #include "layer.h"
+#include "lstmLayer.h"
 #include <assert.h>
 #include <random>
 #include <ostream>
@@ -13,7 +14,7 @@ Network::Network(std::vector<int> layer_sizes, std::seed_seq seed){
 	assert(layer_sizes.size() > 1);
 	Layer* l;
 	for (unsigned int i = 1; i < layer_sizes.size(); i++){
-		l = new Layer(layer_sizes[i - 1], layer_sizes[i], gen);
+		l = new LstmLayer(layer_sizes[i - 1], layer_sizes[i], gen);
 		layers[i-1] = l;
 	}
 	error = NULL; 
