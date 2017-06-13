@@ -1,4 +1,4 @@
-#include "layer.h"
+#include "lstmLayer.h"
 #include "matrix.h"
 #include "vector.h"
 #include "weights.h"
@@ -114,19 +114,16 @@ void adjustWeight(Weight* w, Weight* error, Weight* momentum, double learning_ra
 	deleteWeight(new_w);
 }
 
-Layer::~Layer(){
+LstmLayer::~LstmLayer(){
 	deleteState(state);
 	state = NULL;
 	deleteWeightBundle(weights);
 	deleteWeightBundle(momentum);
 }
 
-Layer::Layer(int input_size, int output_size, std::default_random_engine& gen){
-	this->input_size = input_size;
-	this->output_size = output_size;
-
-	weights = createWeightBundle(input_size, output_size);
-	momentum = createWeightBundle(input_size, output_size);
+LstmLayer::LstmLayer(int input_size, int output_size, std::default_random_engine& gen): Layer(input_size, output_size){
+	weights = createWeightBundle(getInputSize(), getOutputSize());
+	momentum = createWeightBundle(getInputSize(), getOutputSize());
 	fillBundle(weights, gen, 0, 0.1);
 	
 	state = NULL;
@@ -142,8 +139,8 @@ Matrix getPrimitiveGate(Weight* weight, Vector* input, Vector* memory, Vector* o
 	return gate;
 }
 
-Vector Layer::forward_prop(Vector& input){
-	assert(input.get_height() == input_size);
+Vector LstmLayer::forward_prop(Vector& input){
+	assert(input.get_height() == getInputSize());
 
 	Vector* memory = state->memory;
 	
@@ -196,20 +193,20 @@ Vector Layer::forward_prop(Vector& input){
 	return output;
 }
 
-ErrorList* Layer::back_prop(ErrorList* errIn, double learning_rate){
+ErrorList* LstmLayer::back_prop(ErrorList* errIn, double learning_rate){
 	State* top = state;
 	// Initial blank err state
 	ErrorState* errS = new ErrorState();
-	errS->error_input = createErrorMatrix(this->output_size);
-	errS->error_forget = createErrorMatrix(this->output_size);
-	errS->error_activate = createErrorMatrix(this->output_size);
-	errS->error_output = createErrorMatrix(this->output_size);
-	errS->error_memory = new Vector(this->output_size);
+	errS->error_input = createErrorMatrix(getOutputSize());
+	errS->error_forget = createErrorMatrix(getOutputSize());
+	errS->error_activate = createErrorMatrix(getOutputSize());
+	errS->error_output = createErrorMatrix(getOutputSize());
+	errS->error_memory = new Vector(getOutputSize());
 	errS->forget_gate = new Matrix(state->forget_gateP->sigmoid());
 	state->err_state = errS;
 
 	ErrorList* errOut = new ErrorList();
-	WeightBundle* adjustments = createWeightBundle(input_size, output_size);
+	WeightBundle* adjustments = createWeightBundle(getInputSize(), getOutputSize());
 	int counter = get_back_prop(errOut, adjustments, errIn);
 
 	ErrorList* topErr = errOut;
@@ -235,7 +232,7 @@ ErrorList* Layer::back_prop(ErrorList* errIn, double learning_rate){
 	return errOut;
 }
 
-int Layer::get_back_prop(ErrorList* errOut, WeightBundle* weightErr, ErrorList* errIn){
+int LstmLayer::get_back_prop(ErrorList* errOut, WeightBundle* weightErr, ErrorList* errIn){
 
 	// If at end of chain, generate blank weight errors to return
 	if (state->prev_state == NULL){
@@ -327,19 +324,19 @@ int Layer::get_back_prop(ErrorList* errOut, WeightBundle* weightErr, ErrorList* 
 	return get_back_prop(err_o, weightErr, errIn->last) + 1;
 }
 
-void Layer::reset(){
+void LstmLayer::reset(){
 	deleteState(state);
 	state = NULL;
 	
 	state = new State();
-	state->output = new Vector(output_size);
-	state->memory = new Vector(output_size);
+	state->output = new Vector(getOutputSize());
+	state->memory = new Vector(getOutputSize());
 }
 
-void Layer::write_to_json(std::ostream& os){
+void LstmLayer::write_to_json(std::ostream& os){
 	os << "{" << std::endl;
-	os << "\"input size\" : " << input_size << ',' << std::endl;
-	os << "\"output size\" : " << output_size << ',' << std::endl;
+	os << "\"input size\" : " << getInputSize() << ',' << std::endl;
+	os << "\"output size\" : " << getOutputSize() << ',' << std::endl;
 	os << "\"weights\" : {" << std::endl;
 	
 	// To make sure I fix this later
