@@ -38,23 +38,6 @@ void updateWeightErrors(Weight* matErr, State* state, Matrix* error){
 	matErr->bias = new Matrix(bias_e);
 }
 
-ErrorMatrix* createErrorMatrix(int size){
-	ErrorMatrix* err = new ErrorMatrix();
-	err->output = new Vector(size);
-	err->memory = new Vector(size);
-
-	return err;
-}
-
-
-void deleteErrorMatrix(ErrorMatrix* errorMat){
-	if (errorMat == NULL)
-		return;
-	delete errorMat->output;
-	delete errorMat->memory;
-	delete errorMat;
-}
-
 void deleteErrorList(ErrorList* list){
 	if (list == NULL)
 		return;
@@ -62,35 +45,6 @@ void deleteErrorList(ErrorList* list){
 	delete list->error;
 	delete list;
 	deleteErrorList(next);
-}
-
-void deleteErrorState(ErrorState* eState){
-	if (eState == NULL)
-		return;
-	deleteErrorMatrix(eState->error_input);
-	deleteErrorMatrix(eState->error_forget);
-	deleteErrorMatrix(eState->error_activate);
-	deleteErrorMatrix(eState->error_output);
-	delete eState->error_memory;
-	delete eState->forget_gate;
-	delete eState;
-}
-
-void deleteState(State*);
-void deleteState(State* state){
-	if (state == NULL)
-		return;
-	State* next = state->prev_state;
-	deleteErrorState(state->err_state);
-	delete state->input;
-	delete state->memory;
-	delete state->output;
-	delete state->input_gateP;
-	delete state->forget_gateP;
-	delete state->activation_gateP;
-	delete state->output_gateP;
-	delete state;
-	deleteState(next);
 }
 
 void adjustWeight(Weight* w, Weight* error, Weight* momentum, double learning_rate, double momentum_rate){
