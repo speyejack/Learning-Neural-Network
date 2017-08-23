@@ -3,7 +3,7 @@ import random
 from time import sleep
 
 input_layer = 2
-hidden_layer = 5
+hidden_layer = 10
 output_layer = 1
 hidden_weights = np.random.random((hidden_layer, input_layer))
 output_weights = np.random.random((output_layer, hidden_layer))
@@ -35,7 +35,7 @@ def forward_prop(input_v):
     return a_k
 
 
-def backwards_prop(error_k, learning_rate=0.1):
+def backwards_prop(error_k, learning_rate=0.001):
     global hidden_weights
     global output_weights
     global a_k
@@ -45,19 +45,25 @@ def backwards_prop(error_k, learning_rate=0.1):
     hidden_weights -= error_h.dot(b_i.T) * learning_rate
     output_weights -= error_k.dot(b_h.T) * learning_rate
 
-
-for i in range(10):
+total_error = 1
+while total_error > 0.001:
     for j in range(10000):
-        a = random.randint(0, 2)
-        b = random.randint(0, 2)
+        a = random.randint(0, 1)
+        b = random.randint(0, 1)
         input_vector = np.array([[a], [b]])
         output_v = forward_prop(input_vector)
         error_k = output_v - np.array([[a and b]])
-        backwards_prop(error_k)
+        error_value = np.sum(error_k**2)
+        backwards_prop(error_k, learning_rate=total_error/10)
+
+    total_error = 0
     for j in range(4):
         a = j & 1
         b = (j >> 1) & 1
         input_vector = np.array([[a], [b]])
         output_v = forward_prop(input_vector)
-        print("{} && {} = {}".format(a, b, output_v[0][0]))
+        local_error = np.abs(output_v - np.array([[a and b]]))[0][0]
+        total_error += local_error
+        print("{} && {} = {:.6f} \tError: {:.6f}".format(a, b, output_v[0][0], local_error))
+    print("Total Error: {:.6f}".format(total_error))
     print("---------")
