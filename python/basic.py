@@ -13,17 +13,17 @@ class Layer:
 
     def backwards_prop(self, output_errors, learning_rate):
         adjustment_matrix = np.zeros_like(self.weights)
-        return self._backwards_prop(output_errors, learning_rate, adjustment_matrix)
+        return self._backwards_prop(output_errors, learning_rate, adjustment_matrix, 0)
 
-    def _backwards_prop(self, output_errors, learning_rate, adjustment_matrix):
+    def _backwards_prop(self, output_errors, learning_rate, adjustment_matrix, depth):
         if not self.prev_inputs:
-            self.weights -= adjustment_matrix * learning_rate
+            self.weights -= adjustment_matrix * (learning_rate / depth)
             return []
         error_k = output_errors.pop()
         input_t = self.prev_inputs.pop()
         error_i = self.weights.T.dot(error_k) * self.deriv_sigmoid(input_t)
         adjustment_matrix += error_k.dot(input_t.T)
-        return self._backwards_prop(output_errors, learning_rate, adjustment_matrix) + [error_i]
+        return self._backwards_prop(output_errors, learning_rate, adjustment_matrix, depth + 1) + [error_i]
 
     def reset(self):
         self.prev_inputs = []
@@ -62,7 +62,7 @@ class Network:
         return self.output_layer.forward_prop(out)
 
     def backwards_prop(self, error_k, learning_rate):
-        error = [error_k]
+        error = error_k
         error = self.output_layer.backwards_prop(error, learning_rate)
         error = self.hidden_layer.backwards_prop(error, learning_rate)
         return error
@@ -92,13 +92,16 @@ iter_num = 1
 net = Network([2, 10, 1])
 while total_error > 0.01:
     for j in range(10000):
-        a = random.randint(0, 1)
-        b = random.randint(0, 1)
-        input_vector = np.array([[a], [b]])
+        errors = []
+        for i in range(10):
+            a = random.randint(0, 1)
+            b = random.randint(0, 1)
+            input_vector = np.array([[a], [b]])
 
-        output_v = net.forward_prop(input_vector)
-        error_k = output_v - np.array([[a and b]])
-        net.backwards_prop(error_k, learning_rate=total_error/10)
+            output_v = net.forward_prop(input_vector)
+            error_k = output_v - np.array([[a and b]])
+            errors.append(error_k)
+        net.backwards_prop(errors, learning_rate=total_error/10)
 
         error_value = np.sum(error_k**2)
 
