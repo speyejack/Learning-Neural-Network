@@ -122,10 +122,11 @@ def print_network_progress(net, iter_num, training_string, char_list):
         string += str(char_list[maxarg])
         probs.append("{:.3f}".format(output_v[maxarg][0]))
 
+    print("Iter: {}".format(iter_num))
     print(string)
     print(" ".join(probs))
     error = 1 - SequenceMatcher(None, training_string, string).ratio()
-    print(error)
+    print("Error: {:.3}".format(error))
     print("--------")
     net.reset()
     return error
