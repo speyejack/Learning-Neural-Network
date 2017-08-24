@@ -19,12 +19,20 @@ class Layer:
         pass
 
     def backwards_prop(self, output_errors, learning_rate):
-        errors = self._backwards_prop(output_errors, learning_rate, 0, [np.zeros_like(output_errors[0])])
+        amount = len(output_errors)
+        errors = self._backwards_prop(output_errors,
+                                      [np.zeros_like(output_errors[0])])
+        self._apply_adjustments(learning_rate, amount)
         self.reset()
         return errors[:-1]
 
-    def _backwards_prop(self, output_errors, learning_rate, depth, error_is):
+    def _backwards_prop(self, output_errors, error_is):
         pass
+
+    def _apply_adjustments(self, learning_rate, amount):
+        scalar = (learning_rate / amount)
+        for weight in self.adjustments:
+            self.weights[weight] -= self.adjustments[weight] * scalar
 
     def reset(self):
         self.adjustments = {"input": np.zeros_like(self.weights["input"])}
@@ -46,17 +54,15 @@ class OutputLayer(Layer):
         a = self.weights["input"].dot(input_v)
         return a
 
-    def _backwards_prop(self, output_errors, learning_rate, depth, error_is):
+    def _backwards_prop(self, output_errors, error_is):
         if not self.data["inputs"]:
-            self.weights["input"] -= self.adjustments["input"] * \
-                (learning_rate / depth)
             return error_is
+
         error_k = output_errors.pop()
         input_t = self.data["inputs"].pop()
         error_i = self.weights["input"].T.dot(error_k)
         self.adjustments["input"] += error_k.dot(input_t.T)
-        return self._backwards_prop(output_errors, learning_rate,
-                                    depth + 1, [error_i] + error_is)
+        return self._backwards_prop(output_errors, [error_i] + error_is)
 
 
 class HiddenLayer(Layer):
@@ -66,13 +72,10 @@ class HiddenLayer(Layer):
         b = self.sigmoid(a)
         return b
 
-    def _backwards_prop(self, output_errors, learning_rate, depth, error_is):
+    def _backwards_prop(self, output_errors, error_is):
         if not self.data["inputs"]:
-            scalar = (learning_rate / depth)
-            self.weights["input"] -= self.adjustments["input"] * scalar
-            self.weights["hidden"] -= self.adjustments["hidden"] * scalar
-
             return error_is
+
         error_k = self.deriv_sigmoid(self.data["outputs"].pop()) * \
             (output_errors.pop() + self.weights["hidden"].T.dot(error_is[-1]))
         input_t = self.data["inputs"].pop()
@@ -80,8 +83,7 @@ class HiddenLayer(Layer):
             self.deriv_sigmoid(input_t)
         self.adjustments["input"] += error_k.dot(input_t.T)
         self.adjustments["hidden"] += error_k.dot(self.data["outputs"][-1].T)
-        return self._backwards_prop(output_errors, learning_rate,
-                                    depth + 1, [error_i] + error_is)
+        return self._backwards_prop(output_errors, [error_i] + error_is)
 
     def reset(self):
         super().reset()
