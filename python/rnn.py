@@ -1,4 +1,5 @@
 import numpy as np
+from difflib import SequenceMatcher
 
 
 class Layer:
@@ -111,45 +112,44 @@ class Network:
         self.output_layer.reset()
 
 
-def print_network_progress(net, iter_num):
-    total_error = 0
-    print("Iter: {}".format(iter_num))
-    state = 0
-    states = [0, 1, 0]
-    for j in range(len(states)):
-        a = states.pop()
-        input_vector = np.array([[a]])
+def print_network_progress(net, iter_num, training_string, char_list):
+    input_vector = np.array([[1]])
+    string = ""
+    probs = []
+    for char in training_string:
         output_v = net.forward_prop(input_vector)
-        state ^= a
-        local_error = np.abs(output_v - np.array([[state]]))[0][0]
-        total_error += local_error
-        print("state ^= {:d} = {:.3f} ({}) \tError: {:.3f}"
-              .format(a, output_v[0][0], state, local_error))
-    print("Total Error: {:.3f}".format(total_error))
-    print("---------")
+        maxarg = output_v.argmax(axis=0)[0]
+        string += str(char_list[maxarg])
+        probs.append("{:.3f}".format(output_v[maxarg][0]))
+
+    print(string)
+    print(" ".join(probs))
+    error = 1 - SequenceMatcher(None, training_string, string).ratio()
+    print(error)
+    print("--------")
     net.reset()
-    return total_error
+    return error
 
 
 total_error = 1
 iter_num = 1
-net = Network([1, 10, 1])
+net = Network([1, 500, 10])
+training_string = "Hello, World!"
+char_list = list(set(training_string))
 while total_error > 0.01:
     for j in range(1000):
         errors = []
-        state = 0
-        for i in range(3):
-            a = np.random.randint(0, 2)
-            input_vector = np.array([[a]])
+        for char in training_string:
+            char_index = char_list.index(char)
+            input_vector = np.array([[1]])
 
             output_v = net.forward_prop(input_vector)
-            state ^= a
-            error_k = output_v - np.array([[state]])
+            true_output_v = np.zeros((len(char_list), 1))
+            true_output_v[char_index] = 1
+            error_k = output_v - true_output_v
             errors.append(error_k)
         net.backwards_prop(errors, learning_rate=min(total_error, 0.0001))
 
-        error_value = np.sum(error_k**2)
-
-    total_error = print_network_progress(net, iter_num)
+    total_error = print_network_progress(net, iter_num, training_string, char_list)
 
     iter_num += 1
