@@ -109,7 +109,7 @@ while total_error > 0.01:
             errors.append(error_k)
         net.backwards_prop(errors, learning_rate=min(total_error, 0.9))
 
-        error_value = np.sum(error_k**2)
+        error_value = np.sum(error_k**2)**0.5
 
     total_error = print_network_progress(net, iter_num)
 
