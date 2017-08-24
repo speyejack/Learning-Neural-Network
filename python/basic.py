@@ -1,5 +1,4 @@
 import numpy as np
-import random
 import pdb
 from time import sleep
 
@@ -87,21 +86,22 @@ def print_network_progress(net, iter_num):
     net.reset()
     return total_error
 
+np.random.seed(25)
 total_error = 1
 iter_num = 1
 net = Network([2, 10, 1])
 while total_error > 0.01:
-    for j in range(10000):
+    for j in range(1000):
         errors = []
         for i in range(10):
-            a = random.randint(0, 1)
-            b = random.randint(0, 1)
+            a = np.random.randint(0, 2)
+            b = np.random.randint(0, 2)
             input_vector = np.array([[a], [b]])
 
             output_v = net.forward_prop(input_vector)
             error_k = output_v - np.array([[a and b]])
             errors.append(error_k)
-        net.backwards_prop(errors, learning_rate=total_error/10)
+        net.backwards_prop(errors, learning_rate=min(total_error, 0.9))
 
         error_value = np.sum(error_k**2)
 
