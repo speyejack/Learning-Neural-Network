@@ -4,28 +4,36 @@ from time import sleep
 
 class Layer:
     def __init__(self, input_size, output_size):
-        self.weights = np.random.random((output_size, input_size))
-        self.prev_inputs = []
+        self.weights = {"input": np.random.randn(output_size, input_size)}
+        self.reset()
 
     def forward_prop(self, input_v):
-        return input_v
+        self.data["inputs"].append(input_v)
+        output_v = self._forward_prop(input_v)
+        self.data["outputs"].append(output_v)
+        return output_v
+
+    def _forward_prop(self, input_v):
+        pass
 
     def backwards_prop(self, output_errors, learning_rate):
-        adjustment_matrix = np.zeros_like(self.weights)
-        return self._backwards_prop(output_errors, learning_rate, adjustment_matrix, 0)
+        errors = self._backwards_prop(output_errors, learning_rate, 0, [[]])
+        self.reset()
+        return errors[:-1]
 
-    def _backwards_prop(self, output_errors, learning_rate, adjustment_matrix, depth):
-        if not self.prev_inputs:
-            self.weights -= adjustment_matrix * (learning_rate / depth)
-            return []
+    def _backwards_prop(self, output_errors, learning_rate, depth, error_is):
+        if not self.data["inputs"]:
+            self.weights["input"] -= self.adjustments["input"] * (learning_rate / depth)
+            return error_is
         error_k = output_errors.pop()
-        input_t = self.prev_inputs.pop()
-        error_i = self.weights.T.dot(error_k) * self.deriv_sigmoid(input_t)
-        adjustment_matrix += error_k.dot(input_t.T)
-        return self._backwards_prop(output_errors, learning_rate, adjustment_matrix, depth + 1) + [error_i]
+        input_t = self.data["inputs"].pop()
+        error_i = self.weights["input"].T.dot(error_k) * self.deriv_sigmoid(input_t)
+        self.adjustments["input"] += error_k.dot(input_t.T)
+        return self._backwards_prop(output_errors, learning_rate, depth + 1, [error_i] + error_is)
 
     def reset(self):
-        self.prev_inputs = []
+        self.adjustments = {"input": np.zeros_like(self.weights["input"])}
+        self.data = {"inputs": [], "outputs": []}
 
     @staticmethod
     def sigmoid(input_v):
@@ -38,16 +46,14 @@ class Layer:
         return output_v
 
 class OutputLayer(Layer):
-    def forward_prop(self, input_v):
-        self.prev_inputs.append(input_v)
-        a = self.weights.dot(input_v)
+    def _forward_prop(self, input_v):
+        a = self.weights["input"].dot(input_v)
         return a
 
 class HiddenLayer(Layer):
 
-    def forward_prop(self, input_v):
-        self.prev_inputs.append(input_v)
-        a = self.weights.dot(input_v)
+    def _forward_prop(self, input_v):
+        a = self.weights["input"].dot(input_v)
         b = self.sigmoid(a)
         return b
 
